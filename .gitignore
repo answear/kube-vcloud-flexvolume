@@ -1,0 +1,9 @@
+# Vim swap files
+*.sw[a-z]
+# Python files
+*.py[co]
+__pycache__
+.eggs
+*.egg-info
+dist
+build
