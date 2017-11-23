@@ -18,7 +18,7 @@ setup(
     ],
     keywords='',
     package_dir={'': 'src'},
-    packages=['flexvolume'],
+    packages=['flexvolume','vcloud'],
     scripts=['src/vcloud-flexvolume'],
     install_requires=[
         'click',
