@@ -1,6 +1,6 @@
-import sys
 import click
-from .cli import cli
+
+from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
 @click.argument('params')
@@ -9,10 +9,7 @@ from .cli import cli
 def attach(ctx,
            params,
            nodename):
-    try:
-        print(ctx.invoked_subcommand)
-    except Exception as e:
-        sys.exit(-1)
+    pass
 
 @cli.command(short_help='wait for the volume to be attached on the remote node')
 @click.argument('mountdev')
@@ -21,10 +18,7 @@ def attach(ctx,
 def waitforattach(ctx,
                   mountdev,
                   params):
-    try:
-        print(ctx.invoked_subcommand)
-    except Exception as e:
-       sys.exit(-1)
+    pass
 
 @cli.command(short_help='check the volume is attached on the node')
 @click.argument('params')
@@ -33,7 +27,4 @@ def waitforattach(ctx,
 def isattached(ctx,
                params,
                nodename):
-    try:
-        print(ctx.invoked_subcommand)
-    except Exception as e:
-        sys.exit(-1)
+    pass

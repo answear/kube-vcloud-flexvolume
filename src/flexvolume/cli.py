@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+from __future__ import print_function
 
 import sys
+import json
 import click
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -11,5 +12,13 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli(ctx):
     if ctx.invoked_subcommand is None:
         click.secho(ctx.get_help())
-    else:
-        click.echo(ctx.invoked_subcommand)
+
+def error(msg):
+    print(json.dumps(msg), file=sys.stderr)
+    sys.exit(1)
+
+def info(msg):
+    print(json.dumps(msg), file=sys.stdout)
+    sys.exit(0)
+
+success = {"status": "Success"}

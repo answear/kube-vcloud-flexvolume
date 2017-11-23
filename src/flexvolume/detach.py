@@ -1,6 +1,6 @@
-import sys
 import click
-from .cli import cli
+
+from .cli import cli, error, info
 
 @cli.command(short_help='detach the volume from the node')
 @click.argument('mountdev')
@@ -9,7 +9,4 @@ from .cli import cli
 def detach(ctx,
            mountdev,
            nodename):
-    try:
-        print(ctx.invoked_subcommand)
-    except Exception as e:
-        sys.exit(-1)
+    pass
