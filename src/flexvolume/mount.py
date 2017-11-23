@@ -40,8 +40,8 @@ def mountdevice(ctx,
     if fstype == "":
         fstype = params["kubernetes.io/fsType"]
         try:
-            subprocess.check_call(["mkfs", "-t", fstype, "-F", mountdev], stdout=DEVNULL, stderr=DEVNULL)
-        except CalledProcesError:
+            subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
+        except subprocess.CalledProcesError:
             failure = {
                 "status": "Failure",
                 "message": "Failed to create filesystem " + fstype + " on device " + mountdev
@@ -104,12 +104,14 @@ def mount(mountdev, mountdir, mountopts=[]):
         index += 1
 
     try:
-        return subprocess.check_call(params, stderr=DEVNULL)
-    except CalledProcessError:
+        subprocess.check_call(params, stderr=DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
         return False
 
 def umount(mountdir):
     try:
-        return subprocess.check_call(["umount", mountdir], stderr=DEVNULL)
-    except CalledProcessError:
+        subprocess.check_call(["umount", mountdir], stderr=DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
         return False
