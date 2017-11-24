@@ -9,4 +9,8 @@ from .cli import cli, error, info
 def detach(ctx,
            mountdev,
            nodename):
+    # TODO:
+    # 1. Determine which disk we should detach (by looking symlinks in /dev/block)
+    # 2. Login to vCloud
+    # 3. Detach disk from node
     pass

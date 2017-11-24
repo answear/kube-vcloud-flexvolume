@@ -1,5 +1,7 @@
 import click
 
+from vcloud.client import *
+from vcloud.disk import *
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -9,6 +11,11 @@ from .cli import cli, error, info
 def attach(ctx,
            params,
            nodename):
+    # TODO:
+    # 1. Login to vCloud
+    # 2. Find disks with given name
+    # 3. Create disk if not exists
+    # 4. Attach to node
     pass
 
 @cli.command(short_help='wait for the volume to be attached on the remote node')
@@ -18,6 +25,10 @@ def attach(ctx,
 def waitforattach(ctx,
                   mountdev,
                   params):
+    # TODO:
+    # 1. Observe udev events (ACTION="add", SUBSYSTEM="block", TYPE="disk")
+    # 2. Create symlink pointing to device unde /dev/block (eg. /dev/block/mysql -> /dev/sdb)
+    # 3. Create one big partition if not exists
     pass
 
 @cli.command(short_help='check the volume is attached on the node')
@@ -27,4 +38,7 @@ def waitforattach(ctx,
 def isattached(ctx,
                params,
                nodename):
+    # TODO:
+    # 1. Login to vCloud
+    # 2. Check if disk is attached
     pass
