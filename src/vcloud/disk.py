@@ -51,7 +51,7 @@ def attach_disk(ctx, vm_name, disk_name):
                     vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
                     return True
     except Exception as e:
-        raise
+        pass
     return False
 
 def detach_disk(ctx, vm_name, disk_name):
@@ -70,7 +70,7 @@ def detach_disk(ctx, vm_name, disk_name):
                     vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
                     return True
     except Exception as e:
-        raise
+        pass
     return False
 
 def get_disks(ctx):
