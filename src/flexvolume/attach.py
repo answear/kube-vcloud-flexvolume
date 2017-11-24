@@ -27,7 +27,7 @@ def waitforattach(ctx,
                   params):
     # TODO:
     # 1. Observe udev events (ACTION="add", SUBSYSTEM="block", TYPE="disk")
-    # 2. Create symlink pointing to device unde /dev/block (eg. /dev/block/mysql -> /dev/sdb)
+    # 2. Create symlink pointing to device under /dev/block (eg. /dev/block/mysql -> /dev/sdb)
     # 3. Create one big partition if not exists
     pass
 
