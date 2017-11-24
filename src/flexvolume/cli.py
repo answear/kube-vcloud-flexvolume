@@ -22,3 +22,4 @@ def info(msg):
     sys.exit(0)
 
 success = {"status": "Success"}
+failure = {"status": "Failure"}
