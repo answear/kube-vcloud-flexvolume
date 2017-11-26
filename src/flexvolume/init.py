@@ -1,5 +1,4 @@
 import click
-import json
 
 from .cli import cli, error, info
 
