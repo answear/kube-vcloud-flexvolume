@@ -74,7 +74,7 @@ def unmountdevice(ctx,
                   mountdir):
     failure = {
         "status": "Failure",
-        "message": ("Failed to unmount device '%s' from '%s'") % (mountdev, mountdir)
+        "message": ("Failed to unmount device from '%s'") % (mountdir)
     }
 
     if ismounted(mountdir) == False:
@@ -83,7 +83,7 @@ def unmountdevice(ctx,
     if umount(mountdir) == False:
         error(failure)
 
-    info(success)
+    info(GENERIC_SUCCESS)
 
 def ismounted(mountdir):
     try:
