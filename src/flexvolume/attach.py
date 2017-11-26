@@ -1,7 +1,10 @@
 import click
+import json
+import pyudev
 
-from vcloud.client import *
-from vcloud.disk import *
+from functools import partial 
+
+from vcloud import client as Client, disk as Disk, vapp as VApp
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -16,7 +19,73 @@ def attach(ctx,
     # 2. Find disks with given name
     # 3. Create disk if not exists
     # 4. Attach to node
-    pass
+
+    params = json.loads(params)
+    try:
+        is_logged_in = Client.login()
+        if is_logged_in == False:
+            raise Exception("Could not login to vCloud Director")
+        volumeName = params['volumeName']
+        find_disk = \
+            lambda x, disk: next((i['attached_vm'] for i in x if i['name'] == disk), None)
+        is_disk_exist = find_disk(
+                Disk.get_disks(Client.ctx),
+                volumeName
+        )
+        if is_disk_exist is None:
+            disk_urn = Disk.create_disk(
+                    Client.ctx,
+                    volumeName,
+                    params['size'],
+                    params['storage']
+            )
+            if disk_urn == "":
+                raise Exception(
+                        ("Could not create volume '%s'") % (volumeName)
+                )
+        is_disk_attached = Disk.attach_disk(
+               Client.ctx,
+               nodename,
+               volumeName
+        )
+        if is_disk_attached == False:
+            raise Exception(
+                ("Could not attach volume '%s' to node '%s'") % (volumeName, nodename)
+            )
+        is_disk_connected = wait_for_connected_disk()
+        if len(is_disk_connected) == 0:
+            raise Exception(
+                ("Timed out while waiting for volume '%s' to attach on node '%s'") % \
+                        (volumeName, nodename)
+        device_name, device_status = is_disk_connected
+        success = {
+            "status": "Success",
+            "device": "%s" % device_name
+        }
+        info(success)
+    except Exception as e:
+        failure = {
+            "status": "Failure",
+            "message": "%s" % e
+        }
+        error(failure)
+    finally:
+        Client.logout()
+
+def wait_for_connected_disk(timeout=60):
+    ctx = pyudev.Context()
+    mon = pyudev.Monitor.from_netlink(context)
+    mon.filter_by(subsystem='block', device_type='disk')
+
+    result = []
+    for device in iter(partial(monitor.poll, timeout), None):
+        if device.action == 'add':
+            result = [device.device_node, 'connected']
+            break
+        elif device.action == 'remove':
+            result = [device.device_node, 'disconnected']
+            break
+    return result
 
 @cli.command(short_help='wait for the volume to be attached on the remote node')
 @click.argument('mountdev')
@@ -38,7 +107,37 @@ def waitforattach(ctx,
 def isattached(ctx,
                params,
                nodename):
-    # TODO:
-    # 1. Login to vCloud
-    # 2. Check if disk is attached
-    pass
+    attached = False
+    params = json.loads(params)
+    try:
+        is_logged_in = Client.login()
+        if is_logged_in == False:
+            raise Exception("Could not login to vCloud Director")
+
+        vm = VApp.find_vm_in_vapp(Client.ctx, nodename)
+        if len(vm) > 0:
+            vm = vm[0]['vm']
+            volumeName = params['volumeName']
+            disks = Disk.get_disks(Client.ctx)
+            for disk in disks:
+                if disk['name'] == volumeName \
+                        and disk['attached_vm'] == vm:
+                    attached = True
+                    break
+            success = {
+                "status": "Success",
+                "attached": attached
+            }
+            info(success)
+        else:
+            raise Exception(
+                    "Could not find node %s" % nodename
+            )
+    except Exception as e:
+        failure = {
+            "status": "Failure",
+            "message": "%s" % e
+        }
+        error(failure)
+    finally:
+        Client.logout()

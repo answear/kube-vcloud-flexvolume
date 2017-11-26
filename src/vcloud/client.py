@@ -54,6 +54,8 @@ def logout():
     try:
         client = ctx.client
         client.logout()
+        vca = ctx.vca
+        vca.logout()
     except Exception as e:
         return False
     return True
