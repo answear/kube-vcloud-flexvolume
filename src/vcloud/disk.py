@@ -2,9 +2,21 @@ from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
 from pyvcloud.vcd.utils import extract_id
 from vcloud.vapp import find_vm_in_vapp
+from vcloud.utils import size_to_bytes, bytes_to_size
 
 def create_disk(ctx, name, size, storage_profile_name):
+    """
+    Create an independent disk volume
+
+    :param name: (str): The name of the new disk
+    :param size: (str): The size of the new disk in string format (e.g. 100Mi, 2Gi)
+    :param storage_profile_name: (str): The name of the storage profile where a created disk will be attached
+    :return (str): The disk identifier on success, or empty string on failure
+    """
     try:
+        size = size_to_bytes(size)
+        if size == 0:
+            return ""
         disk_resource = ctx.vca.add_disk(
                 ctx.config['vdc'],
                 name,
@@ -14,10 +26,11 @@ def create_disk(ctx, name, size, storage_profile_name):
         tasks = disk_resource[1].get_Tasks()
 
         if tasks:
-           ctx.vca.block_until_completed(tasks[0])
+            disk_id = disk_resource[1].get_id()
+            assert ctx.vca.block_until_completed(tasks[0]) == True
     except Exception as e:
-        return False
-    return True
+        return ""
+    return disk_id
 
 def delete_disk(ctx, name):
     result = []
@@ -87,8 +100,13 @@ def get_disks(ctx):
                 {
                     'name': disk.get('name'),
                     'id': disk_id,
-                    'size_bytes': disk.get('size'),
-                    'status': VCLOUD_STATUS_MAP.get(int(disk.get('status'))),
+                    'size_bytes': int(disk.get('size')),
+                    'size_human': bytes_to_size(
+                            int(disk.get('size'))
+                    ),
+                    'status': VCLOUD_STATUS_MAP.get(
+                            int(disk.get('status'))
+                    ),
                     'attached_vm': attached_vm(disks_relation, disk_id)
                 }
 
