@@ -74,9 +74,9 @@ def attach(ctx,
         Client.logout()
 
 def wait_for_connected_disk(timeout=60):
-    ctx = pyudev.Context()
-    mon = pyudev.Monitor.from_netlink(context)
-    mon.filter_by(subsystem='block', device_type='disk')
+    context = pyudev.Context()
+    monitor = pyudev.Monitor.from_netlink(context)
+    monitor.filter_by(subsystem='block', device_type='disk')
 
     result = []
     for device in iter(partial(monitor.poll, timeout), None):
