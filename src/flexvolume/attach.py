@@ -66,6 +66,7 @@ def attach(ctx,
                             (volumeName, nodename)
                 )
             device_name, device_status = is_disk_connected
+            os.symlink(device_name, volume_symlink)
         else:
             if os.path.lexists(disk_symlink):
                 device_name = os.readlink(disk_symlink)
@@ -81,7 +82,6 @@ def attach(ctx,
                         ("Device '%s' exists on node '%s' but is not a block device") % \
                                 (device_name, nodename)
                     )
-        os.symlink(device_name, volume_symlink)
         success = {
             "status": "Success",
             "device": "%s" % device_name
