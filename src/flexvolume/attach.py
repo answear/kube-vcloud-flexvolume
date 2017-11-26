@@ -57,6 +57,7 @@ def attach(ctx,
             raise Exception(
                 ("Timed out while waiting for volume '%s' to attach on node '%s'") % \
                         (volumeName, nodename)
+                )
         device_name, device_status = is_disk_connected
         success = {
             "status": "Success",
