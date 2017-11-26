@@ -140,13 +140,20 @@ def waitforattach(ctx,
                         stdout=DEVNULL,
                         stderr=DEVNULL
                 )
-                partition = device_name + '1'
+                partition = ("%s%d") % (
+                        device_name,
+                        1
+                )
             except subprocess.CalledProcesError:
                 raise Exception(
                     ("Could not create partition on '%s'") % (device_name)
                 )
         else:
-            partition = partitions[0]
+            partitions.sort()
+            partition = ("/%s/%s") % (
+                    device_name.split('/')[1],
+                    partitions[0]
+            )
 
         success = {
             "status": "Success",
