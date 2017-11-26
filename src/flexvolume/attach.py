@@ -1,4 +1,5 @@
 import os
+import stat
 
 import click
 import json
@@ -71,8 +72,8 @@ def attach(ctx,
             if os.path.lexists(volume_symlink):
                 device_name = os.readlink(volume_symlink)
                 try:
-                    mode = stat(device_name).st_mode
-                    assert mode.S.ISBLK(mode) == True
+                    mode = os.stat(device_name).st_mode
+                    assert stat.S.ISBLK(mode) == True
                 except OSError:
                     raise Exception(
                         ("Device '%s' does not exist on node '%s'") % (device_name, nodename)
