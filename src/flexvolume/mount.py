@@ -9,7 +9,7 @@ try:
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
-from .cli import cli, error, info, success
+from .cli import cli, error, info, GENERIC_SUCCESS
 
 @cli.command(short_help='mount the device to a global path')
 @click.argument('mountdir')

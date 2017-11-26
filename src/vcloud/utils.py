@@ -1,6 +1,9 @@
 import re
 import bitmath
 import math
+import pyudev
+
+from functools import partial 
 
 def size_to_bytes(human_size):
     PARSE_REGEXP = r"(\d+)([MGTPE]i)"
@@ -35,3 +38,17 @@ def bytes_to_size(size):
     s = round(size / p, 2)
     return "%d%s" % (s, units[i])
 
+def wait_for_connected_disk(timeout=600):
+    context = pyudev.Context()
+    monitor = pyudev.Monitor.from_netlink(context)
+    monitor.filter_by(subsystem='block', device_type='disk')
+
+    result = []
+    for device in iter(partial(monitor.poll, timeout), None):
+        if device.action == 'add':
+            result = [device.device_node, 'connected']
+            break
+        elif device.action == 'remove':
+            result = [device.device_node, 'disconnected']
+            break
+    return result

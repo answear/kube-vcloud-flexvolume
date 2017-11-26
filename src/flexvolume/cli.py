@@ -4,6 +4,9 @@ import sys
 import json
 import click
 
+GENERIC_SUCCESS = {"status": "Success"}
+GENERIC_FAILURE = {"status": "Failure"}
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS,
@@ -21,5 +24,3 @@ def info(msg):
     print(json.dumps(msg), file=sys.stdout)
     sys.exit(0)
 
-success = {"status": "Success"}
-failure = {"status": "Failure"}

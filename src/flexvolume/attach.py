@@ -3,11 +3,9 @@ import stat
 
 import click
 import json
-import pyudev
-
-from functools import partial 
 
 from vcloud import client as Client, disk as Disk, vapp as VApp
+from vcloud.utils import wait_for_connected_disk
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -17,20 +15,13 @@ from .cli import cli, error, info
 def attach(ctx,
            params,
            nodename):
-    # TODO:
-    # 1. Login to vCloud
-    # 2. Find disks with given name
-    # 3. Create disk if not exists
-    # 4. Attach to node
     params = json.loads(params)
     try:
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         volumeName = params['volumeName']
-        find_disk = \
-            lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), None)
-        is_disk_exist = find_disk(
+        is_disk_exist = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
                 volumeName
         )
@@ -67,7 +58,8 @@ def attach(ctx,
                             (volumeName, nodename)
                 )
             device_name, device_status = is_disk_connected
-            os.symlink(device_name, volume_symlink)
+            if os.path.lexists(volume_symlink) == False:
+                os.symlink(device_name, volume_symlink)
         else:
             if os.path.lexists(volume_symlink):
                 device_name = os.readlink(volume_symlink)
@@ -96,21 +88,6 @@ def attach(ctx,
         error(failure)
     finally:
         Client.logout()
-
-def wait_for_connected_disk(timeout=600):
-    context = pyudev.Context()
-    monitor = pyudev.Monitor.from_netlink(context)
-    monitor.filter_by(subsystem='block', device_type='disk')
-
-    result = []
-    for device in iter(partial(monitor.poll, timeout), None):
-        if device.action == 'add':
-            result = [device.device_node, 'connected']
-            break
-        elif device.action == 'remove':
-            result = [device.device_node, 'disconnected']
-            break
-    return result
 
 @cli.command(short_help='wait for the volume to be attached on the remote node')
 @click.argument('mountdev')

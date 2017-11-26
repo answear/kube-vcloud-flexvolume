@@ -4,6 +4,9 @@ from pyvcloud.vcd.utils import extract_id
 from vcloud.vapp import find_vm_in_vapp
 from vcloud.utils import size_to_bytes, bytes_to_size
 
+find_disk = \
+    lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), None)
+
 def create_disk(ctx, name, size, storage_profile_name):
     """
     Create an independent disk volume
