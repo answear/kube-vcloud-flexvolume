@@ -68,8 +68,8 @@ def attach(ctx,
             device_name, device_status = is_disk_connected
             os.symlink(device_name, volume_symlink)
         else:
-            if os.path.lexists(disk_symlink):
-                device_name = os.readlink(disk_symlink)
+            if os.path.lexists(volume_symlink):
+                device_name = os.readlink(volume_symlink)
                 try:
                     mode = stat(device_name).st_mode
                     assert mode.S.ISBLK(mode) == True
