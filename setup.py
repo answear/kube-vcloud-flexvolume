@@ -23,7 +23,8 @@ setup(
     install_requires=[
         'click',
         'pyvcloud==18.2.1.dev45',
-        'pyudev'
+        'pyudev',
+        'bitmath'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
