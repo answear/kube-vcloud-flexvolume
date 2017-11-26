@@ -1,3 +1,5 @@
+import os
+
 import click
 import json
 import pyudev
@@ -19,7 +21,6 @@ def attach(ctx,
     # 2. Find disks with given name
     # 3. Create disk if not exists
     # 4. Attach to node
-
     params = json.loads(params)
     try:
         is_logged_in = Client.login()
@@ -27,7 +28,7 @@ def attach(ctx,
             raise Exception("Could not login to vCloud Director")
         volumeName = params['volumeName']
         find_disk = \
-            lambda x, disk: next((i['attached_vm'] for i in x if i['name'] == disk), None)
+            lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), None)
         is_disk_exist = find_disk(
                 Disk.get_disks(Client.ctx),
                 volumeName
@@ -43,22 +44,44 @@ def attach(ctx,
                 raise Exception(
                         ("Could not create volume '%s'") % (volumeName)
                 )
-        is_disk_attached = Disk.attach_disk(
-               Client.ctx,
-               nodename,
-               volumeName
-        )
-        if is_disk_attached == False:
-            raise Exception(
-                ("Could not attach volume '%s' to node '%s'") % (volumeName, nodename)
+        else:
+            disk_urn, attached_vm = is_disk_exist
+
+        volume_symlink = ("/dev/block/%s") % (disk_urn)
+
+        if attached_vm is None:
+            is_disk_attached = Disk.attach_disk(
+                    Client.ctx,
+                    nodename,
+                    volumeName
             )
-        is_disk_connected = wait_for_connected_disk()
-        if len(is_disk_connected) == 0:
-            raise Exception(
-                ("Timed out while waiting for volume '%s' to attach on node '%s'") % \
-                        (volumeName, nodename)
+            if is_disk_attached == False:
+                raise Exception(
+                    ("Could not attach volume '%s' to node '%s'") % (volumeName, nodename)
                 )
-        device_name, device_status = is_disk_connected
+            is_disk_connected = wait_for_connected_disk()
+            if len(is_disk_connected) == 0:
+                raise Exception(
+                    ("Timed out while waiting for volume '%s' to attach on node '%s'") % \
+                            (volumeName, nodename)
+                )
+            device_name, device_status = is_disk_connected
+        else:
+            if os.path.lexists(disk_symlink):
+                device_name = os.readlink(disk_symlink)
+                try:
+                    mode = stat(device_name).st_mode
+                    assert mode.S.ISBLK(mode) == True
+                except OSError:
+                    raise Exception(
+                        ("Device '%s' does not exist on node '%s'") % (device_name, nodename)
+                    )
+                except AssertionError:
+                    raise Exception(
+                        ("Device '%s' exists on node '%s' but is not a block device") % \
+                                (device_name, nodename)
+                    )
+        os.symlink(device_name, volume_symlink)
         success = {
             "status": "Success",
             "device": "%s" % device_name
@@ -73,7 +96,7 @@ def attach(ctx,
     finally:
         Client.logout()
 
-def wait_for_connected_disk(timeout=60):
+def wait_for_connected_disk(timeout=600):
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by(subsystem='block', device_type='disk')
