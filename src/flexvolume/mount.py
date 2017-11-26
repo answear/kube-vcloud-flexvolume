@@ -27,12 +27,12 @@ def mountdevice(ctx,
     except (OSError, AssertionError):
         failure = {
             "status": "Failure",
-            "message": mountdev + " does not exist"
+            "message": ("Device '%s' does not exist") % (mountdev)
         }
         error(failure)
 
     if ismounted(mountdir):
-        info(success)
+        info(GENERIC_SUCCESS)
 
     process = subprocess.Popen(["blkid", "-o", "value", "-s", "TYPE", mountdev], stdout=subprocess.PIPE)
     fstype, err = process.communicate()
@@ -44,7 +44,7 @@ def mountdevice(ctx,
         except subprocess.CalledProcesError:
             failure = {
                 "status": "Failure",
-                "message": "Failed to create filesystem " + fstype + " on device " + mountdev
+                "message": ("Failed to create filesystem '%s' on device '%s'") % (fstype, mountdev)
             }
             error(failure)
     try:
@@ -58,11 +58,11 @@ def mountdevice(ctx,
         mountopts = []
         
     if mount(mountdev, mountdir, mountopts):
-        info(success)
+        info(GENERIC_SUCCESS)
 
     failure = {
         "status": "Failure",
-        "message": "Failed to mount volume at " + mountdir
+        "message": ("Failed to mount device '%s' at '%s'") % (mountdev, mountdir)
     }
     error(failure)
 
@@ -74,11 +74,11 @@ def unmountdevice(ctx,
                   mountdir):
     failure = {
         "status": "Failure",
-        "message": "Failed to unmount volume at " + mountdir
+        "message": ("Failed to unmount device '%s' from '%s'") % (mountdev, mountdir)
     }
 
     if ismounted(mountdir) == False:
-        info(success)
+        info(GENERIC_SUCCESS)
 
     if umount(mountdir) == False:
         error(failure)
