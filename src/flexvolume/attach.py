@@ -1,11 +1,17 @@
 import os
 import stat
+import subprocess
+
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'wb')
 
 import click
 import json
 
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import wait_for_connected_disk
+from vcloud.utils import disk_partitions, wait_for_connected_disk
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -96,11 +102,69 @@ def attach(ctx,
 def waitforattach(ctx,
                   mountdev,
                   params):
-    # TODO:
-    # 1. Observe udev events (ACTION="add", SUBSYSTEM="block", TYPE="disk")
-    # 2. Create symlink pointing to device under /dev/block (eg. /dev/block/mysql -> /dev/sdb)
-    # 3. Create one big partition if not exists
-    pass
+    params = json.loads(params)
+    try:
+        is_logged_in = Client.login()
+        if is_logged_in == False:
+            raise Exception("Could not login to vCloud Director")
+        volumeName = params['volumeName']
+        is_disk_exist = Disk.find_disk(
+                Disk.get_disks(Client.ctx),
+                volumeName
+        )
+        if is_disk_exist is None:
+            raise Exception(
+                    ("Volume '%s' does not exist") % (mountdev)
+            )
+        else:
+            disk_urn, attached_vm = is_disk_exist
+
+        volume_symlink = ("/dev/block/%s") % (disk_urn)
+
+        if os.path.lexists(volume_symlink):
+            device_name = os.readlink(volume_symlink)
+            try:
+                mode = os.stat(device_name).st_mode
+                assert stat.S_ISBLK(mode) == True
+            except OSError:
+                raise Exception(
+                    ("Device '%s' does not exist") % (device_name)
+                )
+            except AssertionError:
+                raise Exception(
+                    ("Device '%s' exists but is not a block device") % \
+                            (device_name)
+                )
+        partitions = disk_partitions(device_name.split('/')[-1])
+        if len(partitions) == 0:
+            try:
+                subprocess.check_call(
+                        ("echo -n ',,83;' | sfdisk %s") % (device_name),
+                        shell=True,
+                        stdout=DEVNULL,
+                        stderr=DEVNULL
+                )
+                partition = device_name + '1'
+            except subprocess.CalledProcesError:
+                raise Exception(
+                    ("Could not create partition on '%s'") % (device_name)
+                )
+        else:
+            partition = partitions[0]
+
+        success = {
+            "status": "Success",
+            "device": "%s" % partition
+        }
+        info(success)
+    except Exception as e:
+        failure = {
+            "status": "Failure",
+            "message": "%s" % e
+        }
+        error(failure)
+    finally:
+        Client.logout()
 
 @cli.command(short_help='check the volume is attached on the node')
 @click.argument('params')

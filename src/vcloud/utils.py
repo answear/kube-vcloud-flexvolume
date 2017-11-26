@@ -4,6 +4,12 @@ import math
 import pyudev
 
 from functools import partial 
+from glob import glob
+from os.path import basename, dirname
+
+def disk_partitions(disk):
+    partitions = "/sys/block/%s/*/start" % (disk)
+    return [basename(dirname(p)) for p in glob(partitions)]
 
 def size_to_bytes(human_size):
     PARSE_REGEXP = r"(\d+)([MGTPE]i)"
