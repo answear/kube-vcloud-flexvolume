@@ -18,16 +18,14 @@ def detach(ctx,
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
-        is_disk_exist = Disk.find_disk(
+        disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
                 mountdev
         )
-        if is_disk_exist is None:
+        if disk_urn is None:
             raise Exception(
                     ("Volume '%s' does not exist") % (mountdev)
             )
-        else:
-            disk_urn, attached_vm = is_disk_exist
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 

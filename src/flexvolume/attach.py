@@ -27,11 +27,11 @@ def attach(ctx,
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         volumeName = params['volumeName']
-        is_disk_exist = Disk.find_disk(
+        disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
                 volumeName
         )
-        if is_disk_exist is None:
+        if disk_urn is None:
             disk_urn = Disk.create_disk(
                     Client.ctx,
                     volumeName,
@@ -42,8 +42,6 @@ def attach(ctx,
                 raise Exception(
                         ("Could not create volume '%s'") % (volumeName)
                 )
-        else:
-            disk_urn, attached_vm = is_disk_exist
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
@@ -108,16 +106,14 @@ def waitforattach(ctx,
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         volumeName = params['volumeName']
-        is_disk_exist = Disk.find_disk(
+        disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
                 volumeName
         )
-        if is_disk_exist is None:
+        if disk_urn is None:
             raise Exception(
                     ("Volume '%s' does not exist") % (mountdev)
             )
-        else:
-            disk_urn, attached_vm = is_disk_exist
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
