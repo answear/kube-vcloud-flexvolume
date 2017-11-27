@@ -25,7 +25,7 @@ Installation
 *  Create the directory `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/sysoperator.pl~vcloud`
 *  Install wrapper `scripts/vcloud` as `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/sysoperator.pl~vcloud/vcloud`
 *  Create the directory `/opt/vcloud-flexvolume/etc`
-*  Install configuration file `config/config.yaml.example` as `/opt/vcloud-flexvolume/etc/config.yaml`
+*  Install configuration file `config/config.yaml.example` as `/opt/vcloud-flexvolume/etc/config.yaml` and set parameters.
 
 Install packages:
 
@@ -53,7 +53,8 @@ Create a Kubernetes Pod such as:
 cat examples/nginx.yaml | kubectl apply -f -
 ```
 
-The driver will create an independent disk named "testdisk" and the volume will also be mounted as /data inside the container.
+The driver will create an independent disk with name "testdisk" and size 1Gi under storage profile "T1".
+The volume will also be mounted as /data inside the container.
 
 
 Options
@@ -67,7 +68,7 @@ Following options are required:
 
 Optional options may be passed:
 
-*  mountoptions - Additional options passed to mount. (e.g. noatime)
+*  mountoptions - Additional options passed to mount. (e.g. noatime, relatime, nobarrier)
 
 TODO
 ====
