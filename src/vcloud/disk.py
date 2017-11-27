@@ -19,7 +19,7 @@ def create_disk(ctx, name, size, storage_profile_name):
     try:
         size = size_to_bytes(size)
         if size == 0:
-            return ""
+            raise
         disk_resource = ctx.vca.add_disk(
                 ctx.config['vdc'],
                 name,

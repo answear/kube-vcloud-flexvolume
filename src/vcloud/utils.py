@@ -35,7 +35,7 @@ def size_to_bytes(human_size):
         return 0
 
 def bytes_to_size(size):
-    units = ("B", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei") 
+    units = ('B', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei')
     if size == 0:
         return "%d%s" % (size, units[0])
 

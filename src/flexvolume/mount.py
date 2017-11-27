@@ -32,49 +32,50 @@ def mountdevice(ctx,
                 params):
     params = json.loads(params)
     try:
-        mode = os.stat(mountdev).st_mode
-        assert stat.S_ISBLK(mode) == True
-    except (OSError, AssertionError):
+        try:
+            mode = os.stat(mountdev).st_mode
+            assert stat.S_ISBLK(mode) == True
+        except (OSError, AssertionError):
+            raise Exception(
+                    ("Device '%s' does not exist") % (mountdev)
+            )
+
+        if ismounted(mountdir):
+            info(GENERIC_SUCCESS)
+
+        process = subprocess.Popen(['blkid', '-o', 'value', '-s', 'TYPE', mountdev], stdout=subprocess.PIPE)
+        fstype, err = process.communicate()
+        fstype = fstype.strip()
+        if fstype == "":
+            fstype = params['kubernetes.io/fsType']
+            try:
+                subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
+            except subprocess.CalledProcesError:
+                raise Exception(
+                        ("Failed to create filesystem '%s' on device '%s'") % (fstype, mountdev)
+                )
+        try:
+            os.stat(mountdir)
+        except:
+            os.mkdir(mountdir)
+
+        try:
+            mountopts = params['mountoptions'].split(',')
+        except:
+            mountopts = []
+
+        if mount(mountdev, mountdir, mountopts):
+            info(GENERIC_SUCCESS)
+
+        raise Exception(
+                ("Failed to mount device '%s' at '%s'") % (mountdev, mountdir)
+        )
+    except Exception as e:
         failure = {
             "status": "Failure",
-            "message": ("Device '%s' does not exist") % (mountdev)
+            "message": "%s" % e
         }
         error(failure)
-
-    if ismounted(mountdir):
-        info(GENERIC_SUCCESS)
-
-    process = subprocess.Popen(["blkid", "-o", "value", "-s", "TYPE", mountdev], stdout=subprocess.PIPE)
-    fstype, err = process.communicate()
-    fstype = fstype.strip()
-    if fstype == "":
-        fstype = params["kubernetes.io/fsType"]
-        try:
-            subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
-        except subprocess.CalledProcesError:
-            failure = {
-                "status": "Failure",
-                "message": ("Failed to create filesystem '%s' on device '%s'") % (fstype, mountdev)
-            }
-            error(failure)
-    try:
-        os.stat(mountdir)
-    except:
-        os.mkdir(mountdir)
-    
-    try:
-        mountopts = params["mountoptions"].split(",")
-    except:
-        mountopts = []
-        
-    if mount(mountdev, mountdir, mountopts):
-        info(GENERIC_SUCCESS)
-
-    failure = {
-        "status": "Failure",
-        "message": ("Failed to mount device '%s' at '%s'") % (mountdev, mountdir)
-    }
-    error(failure)
 
 @cli.command(short_help='unmount the global mount for the device')
 @click.argument('mountdir')
@@ -109,9 +110,9 @@ def ismounted(mountdir):
         return False
 
 def mount(mountdev, mountdir, mountopts=[]):
-    params = ["mount", mountdev, mountdir]
+    params = ['mount', mountdev, mountdir]
     if len(mountopts) > 0:
-        mountopts = [",".join(mountopts)]
+        mountopts = [','.join(mountopts)]
         mountopts.insert(0, "-o")
 
     index = 1
@@ -127,7 +128,7 @@ def mount(mountdev, mountdir, mountopts=[]):
 
 def umount(mountdir):
     try:
-        subprocess.check_call(["umount", mountdir], stderr=DEVNULL)
+        subprocess.check_call(['umount', mountdir], stderr=DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False

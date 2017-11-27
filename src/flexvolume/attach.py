@@ -134,8 +134,10 @@ def waitforattach(ctx,
         partitions = disk_partitions(device_name.split('/')[-1])
         if len(partitions) == 0:
             try:
+                # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
+                cmd_create_partition = ("echo -n ',,83;' | sfdisk %s") % (device_name)
                 subprocess.check_call(
-                        ("echo -n ',,83;' | sfdisk %s") % (device_name),
+                        cmd_create_partition,
                         shell=True,
                         stdout=DEVNULL,
                         stderr=DEVNULL
