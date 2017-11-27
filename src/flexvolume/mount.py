@@ -15,10 +15,9 @@ from .cli import cli, error, info, GENERIC_SUCCESS
 @click.argument('mountdir')
 @click.argument('params')
 @click.pass_context
-def mount(
-        ctx,
-        mountdir,
-        params):
+def mount(ctx,
+          mountdir,
+          params):
     params = json.loads(params)
     success = {
         "status": "Success",
@@ -81,6 +80,16 @@ def mountdevice(ctx,
     }
     error(failure)
 
+@cli.command(short_help='unmount the global mount for the device')
+@click.argument('mountdir')
+@click.pass_context
+def unmount(ctx,
+            mountdir):
+    success = {
+        "status": "Success",
+        "message": "Not supported"
+    }
+    info(success)
 
 @cli.command(short_help='unmount the global mount for the device')
 @click.argument('mountdir')
