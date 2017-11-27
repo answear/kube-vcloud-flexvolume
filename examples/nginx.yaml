@@ -1,0 +1,24 @@
+uapiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-vcloud
+  namespace: default
+spec:
+  containers:
+  - name: nginx-vcloud
+    image: nginx
+    volumeMounts:
+    - name: testdisk
+      mountPath: /data
+    ports:
+    - containerPort: 80
+  volumes:
+  - name: testdisk
+    flexVolume:
+      driver: "sysoperator.pl/vcloud"
+      fsType: "ext4"
+      options:
+        volumeName: "testdisk"
+        size: "1Gi"
+        storage: "T1"
+        mountoptions: "relatime,nobarrier"

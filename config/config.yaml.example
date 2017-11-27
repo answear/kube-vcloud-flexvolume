@@ -1,9 +1,9 @@
 vcloud:
-  host: 
-  org: 
-  vdc: 
-  username: 
-  password: 
+  host: <HOST>
+  org: <ORG>
+  vdc: <VDC NAME>
+  username: <USERNAME>
+  password: <PASSWORD>
   verify_ssl_certs: False
   log: True
   api_version: '27.0'
