@@ -74,3 +74,4 @@ TODO
 ====
 
 *  Write some tests.
+*  Functions in flexvolume/mount.py should raise Exceptions just like the ones in attach.py.
