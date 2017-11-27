@@ -1,5 +1,5 @@
 vcloud:
-  host: <HOST>
+  host: <HOST without proto>
   org: <ORG>
   vdc: <VDC NAME>
   username: <USERNAME>
