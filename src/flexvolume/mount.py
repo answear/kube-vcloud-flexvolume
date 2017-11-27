@@ -13,6 +13,21 @@ from .cli import cli, error, info, GENERIC_SUCCESS
 
 @cli.command(short_help='mount the device to a global path')
 @click.argument('mountdir')
+@click.argument('params')
+@click.pass_context
+def mount(
+        ctx,
+        mountdir,
+        params):
+    params = json.loads(params)
+    success = {
+        "status": "Success",
+        "message": "Not supported"
+    }
+    info(success)
+
+@cli.command(short_help='mount the device to a global path')
+@click.argument('mountdir')
 @click.argument('mountdev')
 @click.argument('params')
 @click.pass_context
