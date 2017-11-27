@@ -51,7 +51,7 @@ sudo python setup.py install
 or
 
 ```
-pip install git+https://https://github.com/sysoperator/kube-vcloud-flexvolume.git
+pip install git+https://github.com/sysoperator/kube-vcloud-flexvolume.git
 ```
 
 Create a Kubernetes Pod such as:
