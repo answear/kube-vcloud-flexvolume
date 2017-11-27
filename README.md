@@ -62,10 +62,14 @@ Options
 Following options are required:
 
 *  volumeName - Name of the independent disk volume.
-*  size - Size to allocate for the new independent disk volume. Accepts any value in human-readable format (e.g. 100Mi, 1Gi)
+*  size - Size to allocate for the new independent disk volume. Accepts any value in human-readable format. (e.g. 100Mi, 1Gi)
 *  storage - Name of the storage pool.
 
 Optional options may be passed:
 
 *  mountoptions - Additional options passed to mount. (e.g. noatime)
 
+TODO
+====
+
+*  Write some tests.
