@@ -9,7 +9,7 @@ try:
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
-from .cli import cli, error, info, GENERIC_SUCCESS
+from .cli import cli, error, info, GENERIC_SUCCESS, GENERIC_NOTSUPPORTED
 
 @cli.command(short_help='mount the device to a global path')
 @click.argument('mountdir')
@@ -19,11 +19,7 @@ def mount(ctx,
           mountdir,
           params):
     params = json.loads(params)
-    success = {
-        "status": "Success",
-        "message": "Not supported"
-    }
-    info(success)
+    info(GENERIC_NOTSUPPORTED)
 
 @cli.command(short_help='mount the device to a global path')
 @click.argument('mountdir')
@@ -85,11 +81,7 @@ def mountdevice(ctx,
 @click.pass_context
 def unmount(ctx,
             mountdir):
-    success = {
-        "status": "Success",
-        "message": "Not supported"
-    }
-    info(success)
+    info(GENERIC_NOTSUPPORTED)
 
 @cli.command(short_help='unmount the global mount for the device')
 @click.argument('mountdir')

@@ -6,6 +6,7 @@ import click
 
 GENERIC_SUCCESS = {"status": "Success"}
 GENERIC_FAILURE = {"status": "Failure"}
+GENERIC_NOTSUPPORTED = {"status": "Not supported"}
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
