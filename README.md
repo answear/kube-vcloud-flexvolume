@@ -39,12 +39,19 @@ Install packages:
 *  python-progressbar
 *  python-pyudev
 *  python-pyvmomi
+*  python-wheel
 
 Install the driver itself:
 
 ```
 python setup.py build
 sudo python setup.py install
+```
+
+or
+
+```
+pip install git+https://https://github.com/sysoperator/kube-vcloud-flexvolume.git
 ```
 
 Create a Kubernetes Pod such as:

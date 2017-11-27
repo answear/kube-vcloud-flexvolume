@@ -1,3 +1,4 @@
+!.keep
 # Vim swap files
 *.sw[a-z]
 # Python files
@@ -7,5 +8,6 @@ __pycache__
 *.egg-info
 dist
 build
+tests
 # Sensitive data:
 config.yaml
