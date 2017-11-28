@@ -4,8 +4,8 @@ from pyvcloud.vcd.utils import extract_id
 
 def find_vm_in_vapp(ctx, vm_name):
     result = []
-    resource_type = 'vApp'
     try:
+        resource_type = 'vApp'
         query = ctx.client.get_typed_query(
                 resource_type,
                 query_result_format=QueryResultFormat.ID_RECORDS)

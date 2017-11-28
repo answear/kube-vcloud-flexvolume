@@ -93,24 +93,28 @@ def get_disks(ctx):
     result = []
     attached_vm = \
         lambda x, disk: next((i['vm'] for i in x if i['disk'] == disk), None)
-
     try:
-        disks = ctx.vdc.get_disks()
+        resource_type = 'disk'
+        query = ctx.client.get_typed_query(
+                resource_type,
+                query_result_format=QueryResultFormat.ID_RECORDS)
+        disks = list(query.execute())
         disks_relation = get_vm_disk_relation(ctx)
         for disk in disks:
+            if disk.get('vdcName') != ctx.config['vdc']:
+                continue
             disk_id = extract_id(disk.get('id'))
             result.append(
                 {
                     'name': disk.get('name'),
                     'id': disk_id,
-                    'size_bytes': int(disk.get('size')),
+                    'size_bytes': int(disk.get('sizeB')),
                     'size_human': bytes_to_size(
-                            int(disk.get('size'))
+                            int(disk.get('sizeB'))
                     ),
-                    'status': VCLOUD_STATUS_MAP.get(
-                            int(disk.get('status'))
-                    ),
-                    'attached_vm': attached_vm(disks_relation, disk_id)
+                    'status': disk.get('status'),
+                    'attached_vm': attached_vm(disks_relation, disk_id),
+                    'vdc': extract_id(disk.get('vdc'))
                 }
 
             )
@@ -120,8 +124,8 @@ def get_disks(ctx):
 
 def get_vm_disk_relation(ctx):
     result = []
-    resource_type = 'vmDiskRelation'
     try:
+        resource_type = 'vmDiskRelation'
         query = ctx.client.get_typed_query(
                 resource_type,
                 query_result_format=QueryResultFormat.ID_RECORDS)
