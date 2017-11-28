@@ -11,7 +11,7 @@ except ImportError:
 
 from .cli import cli, error, info, GENERIC_SUCCESS, GENERIC_NOTSUPPORTED
 
-@cli.command(short_help='mount the device to a global path')
+@cli.command(short_help='mount the volume at the mount dir')
 @click.argument('mountdir')
 @click.argument('params')
 @click.pass_context
@@ -37,7 +37,7 @@ def mountdevice(ctx,
             assert stat.S_ISBLK(mode) == True
         except (OSError, AssertionError):
             raise Exception(
-                    ("Device '%s' does not exist") % (mountdev)
+                    ("Mount device '%s' does not exist") % (mountdev)
             )
 
         if ismounted(mountdir):
@@ -52,7 +52,7 @@ def mountdevice(ctx,
                 subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
             except subprocess.CalledProcesError:
                 raise Exception(
-                        ("Failed to create filesystem '%s' on device '%s'") % (fstype, mountdev)
+                        ("Failed to create filesystem '%s' on mount device '%s'") % (fstype, mountdev)
                 )
         try:
             os.stat(mountdir)
@@ -77,7 +77,7 @@ def mountdevice(ctx,
         }
         error(failure)
 
-@cli.command(short_help='unmount the global mount for the device')
+@cli.command(short_help='unmount the volume')
 @click.argument('mountdir')
 @click.pass_context
 def unmount(ctx,

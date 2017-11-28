@@ -7,7 +7,7 @@ from vcloud.utils import size_to_bytes, bytes_to_size
 find_disk = \
     lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), [None, None])
 
-def create_disk(ctx, name, size, storage_profile_name):
+def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_type=None):
     """
     Create an independent disk volume
 
@@ -24,7 +24,9 @@ def create_disk(ctx, name, size, storage_profile_name):
                 ctx.config['vdc'],
                 name,
                 size=size,
-                storage_profile_name=storage_profile_name
+                storage_profile_name=storage_profile_name,
+                bus_type=bus_type,
+                bus_sub_type=bus_sub_type
         )
         tasks = disk_resource[1].get_Tasks()
 

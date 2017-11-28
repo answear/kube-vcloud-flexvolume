@@ -8,11 +8,11 @@ from vcloud.utils import wait_for_connected_disk
 from .cli import cli, error, info, GENERIC_SUCCESS
 
 @cli.command(short_help='detach the volume from the node')
-@click.argument('mountdev')
+@click.argument('volume')
 @click.argument('nodename')
 @click.pass_context
 def detach(ctx,
-           mountdev,
+           volume,
            nodename):
     try:
         is_logged_in = Client.login()
@@ -20,11 +20,11 @@ def detach(ctx,
             raise Exception("Could not login to vCloud Director")
         disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
-                mountdev
+                volume
         )
         if disk_urn is None:
             raise Exception(
-                    ("Volume '%s' does not exist") % (mountdev)
+                    ("Volume '%s' does not exist") % (volume)
             )
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
@@ -35,19 +35,19 @@ def detach(ctx,
         is_disk_detached = Disk.detach_disk(
                 Client.ctx,
                 nodename,
-                mountdev
+                volume
         )
         if is_disk_detached == False:
             raise Exception(
                     ("Could not detach volume '%s' from node '%s'") % \
-                            (mountdev, nodename)
+                            (volume, nodename)
             )
         else:
             is_disk_disconnected = wait_for_connected_disk(10)
             if len(is_disk_disconnected) == 0:
                 raise Exception(
                     ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
-                            (mountdev, nodename)
+                            (volume, nodename)
                 )
             device_name, device_status = is_disk_disconnected
             if os.path.lexists(volume_symlink):
