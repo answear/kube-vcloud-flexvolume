@@ -78,7 +78,7 @@ def attach(ctx,
                     raise Exception(
                         ("Device '%s' exists on node '%s' but is not a block device") % \
                                 (device_name, nodename)
-
+                    )
         partitions = disk_partitions(device_name.split('/')[-1])
         if len(partitions) == 0:
             try:
@@ -105,7 +105,6 @@ def attach(ctx,
                     partitions[0]
             )
 
-                   )
         success = {
             "status": "Success",
             "device": "%s" % partition
