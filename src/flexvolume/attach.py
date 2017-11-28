@@ -160,7 +160,7 @@ def waitforattach(ctx,
         partitions = disk_partitions(device_name.split('/')[-1])
         attached = False
         for part in partitions:
-            if part == mountdev:
+            if part == mountdev.split('/')[-1]:
                 attached = True
                 break
         if attached:
