@@ -26,21 +26,27 @@ def attach(ctx,
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
-        volumeName = params['volumeName']
+        volume = params['volumeName']
+        disk_storage = params['storage'] if 'storage' in params else Client.ctx.config['default_storage']
+        disk_bus_type = int(params['busType']) if 'busType' in params else None
+        disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
+
         disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
-                volumeName
+                volume
         )
         if disk_urn is None:
             disk_urn = Disk.create_disk(
                     Client.ctx,
-                    volumeName,
+                    volume,
                     params['size'],
-                    params['storage']
+                    disk_storage,
+                    bus_type=disk_bus_type,
+                    bus_sub_type=disk_bus_sub_type
             )
             if disk_urn == "":
                 raise Exception(
-                        ("Could not create volume '%s'") % (volumeName)
+                        ("Could not create volume '%s'") % (volume)
                 )
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
@@ -49,17 +55,17 @@ def attach(ctx,
             is_disk_attached = Disk.attach_disk(
                     Client.ctx,
                     nodename,
-                    volumeName
+                    volume
             )
             if is_disk_attached == False:
                 raise Exception(
-                    ("Could not attach volume '%s' to node '%s'") % (volumeName, nodename)
+                        ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
                 )
-            is_disk_connected = wait_for_connected_disk()
+            is_disk_connected = wait_for_connected_disk(60)
             if len(is_disk_connected) == 0:
                 raise Exception(
-                    ("Timed out while waiting for volume '%s' to attach on node '%s'") % \
-                            (volumeName, nodename)
+                        ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
+                                (volume, nodename)
                 )
             device_name, device_status = is_disk_connected
             if os.path.lexists(volume_symlink) == False:
@@ -72,13 +78,19 @@ def attach(ctx,
                     assert stat.S_ISBLK(mode) == True
                 except OSError:
                     raise Exception(
-                        ("Device '%s' does not exist on node '%s'") % (device_name, nodename)
+                            ("Device '%s' does not exist on node '%s'") % (device_name, nodename)
                     )
                 except AssertionError:
                     raise Exception(
-                        ("Device '%s' exists on node '%s' but is not a block device") % \
-                                (device_name, nodename)
+                            ("Device '%s' exists on node '%s' but is not a block device") % \
+                                    (device_name, nodename)
                     )
+            else:
+                import inspect
+                raise Exception(
+                        ("Fatal error on line %d") % (inspect.currentframe().f_lineno)
+                )
+
         partitions = disk_partitions(device_name.split('/')[-1])
         if len(partitions) == 0:
             try:
@@ -96,7 +108,7 @@ def attach(ctx,
                 )
             except subprocess.CalledProcesError:
                 raise Exception(
-                    ("Could not create partition on '%s'") % (device_name)
+                        ("Could not create partition on device '%s'") % (device_name)
                 )
         else:
             partitions.sort()
@@ -119,7 +131,7 @@ def attach(ctx,
     finally:
         Client.logout()
 
-@cli.command(short_help='wait for the volume to be attached on the remote node')
+@cli.command(short_help='wait for the mount device to be attached on the remote node')
 @click.argument('mountdev')
 @click.argument('params')
 @click.pass_context
@@ -131,10 +143,10 @@ def waitforattach(ctx,
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
-        volumeName = params['volumeName']
+        volume = params['volumeName']
         disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
-                volumeName
+                volume
         )
         if disk_urn is None:
             raise Exception(
@@ -150,12 +162,12 @@ def waitforattach(ctx,
                 assert stat.S_ISBLK(mode) == True
             except OSError:
                 raise Exception(
-                    ("Device '%s' does not exist") % (device_name)
+                        ("Device '%s' does not exist") % (device_name)
                 )
             except AssertionError:
                 raise Exception(
-                    ("Device '%s' exists but is not a block device") % \
-                            (device_name)
+                        ("Device '%s' exists but is not a block device") % \
+                                (device_name)
                 )
         partitions = disk_partitions(device_name.split('/')[-1])
         attached = False
@@ -171,7 +183,8 @@ def waitforattach(ctx,
             info(success)
         else:
             raise Exception(
-                ("Volume '%s' is not attached on the remote node") % mountdev
+                    ("Mount device '%s' is not attached on the remote node") % \
+                            (mountdev)
             )
     except Exception as e:
         failure = {
@@ -199,10 +212,10 @@ def isattached(ctx,
         vm = VApp.find_vm_in_vapp(Client.ctx, nodename)
         if len(vm) > 0:
             vm = vm[0]['vm']
-            volumeName = params['volumeName']
+            volume = params['volumeName']
             disks = Disk.get_disks(Client.ctx)
             for disk in disks:
-                if disk['name'] == volumeName \
+                if disk['name'] == volume \
                         and disk['attached_vm'] == vm:
                     attached = True
                     break
@@ -213,7 +226,7 @@ def isattached(ctx,
             info(success)
         else:
             raise Exception(
-                    "Could not find node %s" % nodename
+                    ("Could not find node '%s'") % (nodename)
             )
     except Exception as e:
         failure = {

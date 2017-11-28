@@ -1,7 +1,7 @@
 import click
 import json
 
-from .cli import cli, error, info, GENERIC_NOTSUPPORTED
+from .cli import cli, error, info
 
 @cli.command(short_help='get the volume name')
 @click.argument('params')
@@ -10,4 +10,9 @@ def getvolumename(
         ctx,
         params):
     params = json.loads(params)
-    info(GENERIC_NOTSUPPORTED)
+
+    success = {
+        "status": "Success",
+        "volumeName": params['volumeName']
+    }
+    info(success)

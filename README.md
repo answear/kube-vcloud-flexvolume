@@ -71,11 +71,13 @@ Following options are required:
 
 *  volumeName - Name of the independent disk volume.
 *  size - Size to allocate for the new independent disk volume. Accepts any value in human-readable format. (e.g. 100Mi, 1Gi)
-*  storage - Name of the storage pool.
 
 Optional options may be passed:
 
-*  mountoptions - Additional options passed to mount. (e.g. noatime, relatime, nobarrier)
+*  busType - Disk bus type expressed as a string. One of: 5 - IDE, 6 - SCSI (default), 20 - SATA.
+*  busSubType - Disk bus subtype expressed as a string. One of: "" (busType=5), buslogic (busType=6), lsilogic (busType=6), lsilogicsas (busType=6), VirtualSCSI (busType=6), vmware.sata.ahci (busType=20).
+*  storage - Name of the storage pool.
+*  mountoptions - Additional comma-separated options passed to mount. (e.g. noatime, relatime, nobarrier)
 
 
 Driver invocation
