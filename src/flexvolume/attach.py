@@ -78,10 +78,37 @@ def attach(ctx,
                     raise Exception(
                         ("Device '%s' exists on node '%s' but is not a block device") % \
                                 (device_name, nodename)
-                    )
+
+        partitions = disk_partitions(device_name.split('/')[-1])
+        if len(partitions) == 0:
+            try:
+                # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
+                cmd_create_partition = ("echo -n ',,83;' | sfdisk %s") % (device_name)
+                subprocess.check_call(
+                        cmd_create_partition,
+                        shell=True,
+                        stdout=DEVNULL,
+                        stderr=DEVNULL
+                )
+                partition = ("%s%d") % (
+                        device_name,
+                        1
+                )
+            except subprocess.CalledProcesError:
+                raise Exception(
+                    ("Could not create partition on '%s'") % (device_name)
+                )
+        else:
+            partitions.sort()
+            partition = ("/%s/%s") % (
+                    device_name.split('/')[1],
+                    partitions[0]
+            )
+
+                   )
         success = {
             "status": "Success",
-            "device": "%s" % device_name
+            "device": "%s" % partition
         }
         info(success)
     except Exception as e:
@@ -133,23 +160,9 @@ def waitforattach(ctx,
                 )
         partitions = disk_partitions(device_name.split('/')[-1])
         if len(partitions) == 0:
-            try:
-                # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
-                cmd_create_partition = ("echo -n ',,83;' | sfdisk %s") % (device_name)
-                subprocess.check_call(
-                        cmd_create_partition,
-                        shell=True,
-                        stdout=DEVNULL,
-                        stderr=DEVNULL
-                )
-                partition = ("%s%d") % (
-                        device_name,
-                        1
-                )
-            except subprocess.CalledProcesError:
-                raise Exception(
-                    ("Could not create partition on '%s'") % (device_name)
-                )
+            raise Exception(
+                    ("Device '%s' does not have partitions") % (device_name)
+            )
         else:
             partitions.sort()
             partition = ("/%s/%s") % (
