@@ -158,22 +158,21 @@ def waitforattach(ctx,
                             (device_name)
                 )
         partitions = disk_partitions(device_name.split('/')[-1])
-        if len(partitions) == 0:
-            raise Exception(
-                    ("Device '%s' does not have partitions") % (device_name)
-            )
+        attached = False
+        for part in partitions:
+            if part == mountdev:
+                attached = True
+                break
+        if attached:
+            success = {
+                "status": "Success",
+                "device": "%s" % mountdev
+            }
+            info(success)
         else:
-            partitions.sort()
-            partition = ("/%s/%s") % (
-                    device_name.split('/')[1],
-                    partitions[0]
+            raise Exception(
+                ("Volume '%s' is not attached on the remote node") % mountdev
             )
-
-        success = {
-            "status": "Success",
-            "device": "%s" % partition
-        }
-        info(success)
     except Exception as e:
         failure = {
             "status": "Failure",
