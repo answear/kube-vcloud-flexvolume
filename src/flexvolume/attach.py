@@ -28,7 +28,7 @@ def attach(ctx,
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
         disk_storage = params['storage'] if 'storage' in params else Client.ctx.config['default_storage']
-        disk_bus_type = params['busType'] if 'busType' in params else None
+        disk_bus_type = int(params['busType']) if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
 
         disk_urn, attached_vm = Disk.find_disk(
