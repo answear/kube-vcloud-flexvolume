@@ -74,7 +74,7 @@ Following options are required:
 
 Optional options may be passed:
 
-*  busType - Disk bus type expressed as a number. One of: 5 - IDE, 6 - SCSI (default), 20 - SATA.
+*  busType - Disk bus type expressed as a string. One of: 5 - IDE, 6 - SCSI (default), 20 - SATA.
 *  busSubType - Disk bus subtype expressed as a string. One of: "" (busType=5), buslogic (busType=6), lsilogic (busType=6), lsilogicsas (busType=6), VirtualSCSI (busType=6), vmware.sata.ahci (busType=20).
 *  storage - Name of the storage pool.
 *  mountoptions - Additional comma-separated options passed to mount. (e.g. noatime, relatime, nobarrier)
