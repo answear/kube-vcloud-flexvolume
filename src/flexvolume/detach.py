@@ -43,7 +43,7 @@ def detach(ctx,
                             (volume, nodename)
             )
         else:
-            is_disk_disconnected = wait_for_connected_disk(10)
+            is_disk_disconnected = wait_for_connected_disk(60)
             if len(is_disk_disconnected) == 0:
                 raise Exception(
                     ("Timed out while waiting for volume '%s' to detach from node '%s'") % \

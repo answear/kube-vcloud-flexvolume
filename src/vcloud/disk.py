@@ -110,6 +110,8 @@ def get_disks(ctx):
                 {
                     'name': disk.get('name'),
                     'id': disk_id,
+                    'bus_type': int(disk.get('busType')),
+                    'bus_sub_type': disk.get('busSubType'),
                     'size_bytes': int(disk.get('sizeB')),
                     'size_human': bytes_to_size(
                             int(disk.get('sizeB'))
