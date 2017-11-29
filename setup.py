@@ -27,7 +27,7 @@ setup(
         'pyvcloud==18.2.1.dev45',
         'pyudev',
         'bitmath',
-        'etcd3autodiscover'
+        'etcd3autodiscover==0.1.0'
     ],
     dependency_links=[
         'git+https://github.com/sysoperator/python-etcd3autodiscover@0.1.0#egg=etcd3autodiscover'
