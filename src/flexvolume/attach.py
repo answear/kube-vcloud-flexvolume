@@ -98,9 +98,9 @@ def attach(ctx,
                             ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
                                     (volume, nodename)
                     )
-                    device_name, device_status = is_disk_connected
-                    if os.path.lexists(volume_symlink) == False:
-                        os.symlink(device_name, volume_symlink)
+                device_name, device_status = is_disk_connected
+                if os.path.lexists(volume_symlink) == False:
+                    os.symlink(device_name, volume_symlink)
                 if n > 0:
                     sleep(round(Decimal(4 * 1.29 ** n)))
             lock.release()
