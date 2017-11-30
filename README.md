@@ -11,6 +11,13 @@ Status
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
 The current works-for-me version is: [1.1.1a2](../../releases/tag/1.1.1a2).
 
+
+Cavetas
+=======
+
+Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands.
+Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.
+
 Description
 ============
 
