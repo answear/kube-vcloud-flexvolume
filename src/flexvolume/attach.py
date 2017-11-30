@@ -67,7 +67,8 @@ def attach(ctx,
                         ("Could not connect to etcd server '%s'") % (etcd.errstr())
                 )
             lock_name = ("vcloud/%s/disk/attach") % (nodename)
-            with client.lock(lock_name, 175) as lock:
+            lock_ttl = 240
+            with client.lock(lock_name, lock_ttl) as lock:
                 n = 0
                 absolute = 10
                 while lock.is_acquired() == False and n < 6:
@@ -86,20 +87,21 @@ def attach(ctx,
                         nodename,
                         volume
                 )
+                if is_disk_attached == False:
+                    raise Exception(
+                            ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
+                    )
+                lock.refresh()
+                is_disk_connected = wait_for_connected_disk(60)
+                if len(is_disk_connected) == 0:
+                    raise Exception(
+                            ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
+                                    (volume, nodename)
+                    )
+                    device_name, device_status = is_disk_connected
+                    if os.path.lexists(volume_symlink) == False:
+                        os.symlink(device_name, volume_symlink)
             lock.release()
-            if is_disk_attached == False:
-                raise Exception(
-                        ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
-                )
-            is_disk_connected = wait_for_connected_disk(60)
-            if len(is_disk_connected) == 0:
-                raise Exception(
-                        ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
-                                (volume, nodename)
-                )
-            device_name, device_status = is_disk_connected
-            if os.path.lexists(volume_symlink) == False:
-                os.symlink(device_name, volume_symlink)
         else:
             if os.path.lexists(volume_symlink):
                 device_name = os.readlink(volume_symlink)
