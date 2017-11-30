@@ -66,7 +66,10 @@ def attach_disk(ctx, vm_name, disk_name):
             disk_refs = ctx.vca.get_diskRefs(vdc)
             for disk_ref in disk_refs:
                 if disk_ref.name == disk_name:
-                    vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
+                    task = vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
+
+                    if task:
+                        assert ctx.vca.block_until_completed(task) == True
                     return True
     except Exception as e:
         pass
