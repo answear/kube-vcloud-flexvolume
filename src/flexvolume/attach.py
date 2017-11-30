@@ -102,7 +102,7 @@ def attach(ctx,
                     if os.path.lexists(volume_symlink) == False:
                         os.symlink(device_name, volume_symlink)
                 if n > 0:
-                    sleep(round(Decimal(4 * 1.29 ** n))
+                    sleep(round(Decimal(4 * 1.29 ** n)))
             lock.release()
         else:
             if os.path.lexists(volume_symlink):
