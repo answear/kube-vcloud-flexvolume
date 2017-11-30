@@ -87,7 +87,7 @@ def attach(ctx,
                 else:
                     print("Locked")
                 lock.refresh()
-                is_disk_attached = Disk.attach_disk(
+                is_disk_attached = Disk.attach_disk_t(
                         Client.ctx,
                         nodename,
                         volume
@@ -102,10 +102,14 @@ def attach(ctx,
                             ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
                                     (volume, nodename)
                     )
+                # Make sure task is completed
+                if hasattr(is_disk_attached, 'id'):
+                    ctx.vca.block_until_completed(task)
+
                 device_name, device_status = is_disk_connected
                 if os.path.lexists(volume_symlink) == False:
                     os.symlink(device_name, volume_symlink)
-                sleep(round(Decimal(4 * 1.29 ** n)))
+            
             lock.release()
         else:
             if os.path.lexists(volume_symlink):
