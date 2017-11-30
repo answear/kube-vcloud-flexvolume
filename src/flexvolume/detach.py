@@ -1,6 +1,9 @@
 import os
 import stat
 
+from etcd3autodiscover import Etcd3Autodiscover
+from decimal import Decimal
+
 import click
 
 from vcloud import client as Client, disk as Disk, vapp as VApp
@@ -32,31 +35,57 @@ def detach(ctx,
         if attached_vm is None:
             info(GENERIC_SUCCESS)
 
-        is_disk_detached = Disk.detach_disk(
-                Client.ctx,
-                nodename,
-                volume
-        )
-        if is_disk_detached == False:
+        etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                 ca_cert=config['etcd']['ca_cert'],
+                                 cert_key=config['etcd']['key'],
+                                 cert_cert=config['etcd']['cert'],
+                                 timeout=config['etcd']['timeout'])
+        client = etcd.connect()
+        if client is None:
             raise Exception(
-                    ("Could not detach volume '%s' from node '%s'") % \
-                            (volume, nodename)
+                    ("Could not connect to etcd server '%s'") % (etcd.errstr())
             )
-        else:
-            is_disk_disconnected = wait_for_connected_disk(60)
-            if len(is_disk_disconnected) == 0:
+        lock_name = ("vcloud/%s/disk/detach") % (nodename)
+        lock_ttl = 120
+        with client.lock(lock_name, ttl=lock_ttl) as lock:
+            n = 0
+            absolute = 10
+            while lock.is_acquired() == False and n < 6:
+                timeout = round(Decimal(4 * 1.29 ** n))
+                absolute += timeout
+                n += 1
+                lock.acquire(timeout=timeout)
+
+            if lock.is_acquired() == False:
                 raise Exception(
-                    ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
-                            (volume, nodename)
+                        ("Could not acquire lock after %0.fs. Giving up") % (absolute)
                 )
-            # Make sure task is completed
-            if hasattr(is_disk_detached, 'id'):
-                Client.ctx.vca.block_until_completed(is_disk_detached)
+            lock.refresh()
+            is_disk_detached = Disk.detach_disk(
+                    Client.ctx,
+                    nodename,
+                    volume
+            )
+            if is_disk_detached == False:
+                raise Exception(
+                        ("Could not detach volume '%s' from node '%s'") % \
+                                (volume, nodename)
+                )
+            else:
+                is_disk_disconnected = wait_for_connected_disk(60)
+                if len(is_disk_disconnected) == 0:
+                    raise Exception(
+                        ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
+                                (volume, nodename)
+                    )
+                # Make sure task is completed
+                if hasattr(is_disk_detached, 'id'):
+                    Client.ctx.vca.block_until_completed(is_disk_detached)
 
-            device_name, device_status = is_disk_disconnected
-            if os.path.lexists(volume_symlink):
-                os.unlink(volume_symlink)
-
+                device_name, device_status = is_disk_disconnected
+                if os.path.lexists(volume_symlink):
+                    os.unlink(volume_symlink)
+        lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
         failure = {

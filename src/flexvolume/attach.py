@@ -2,9 +2,8 @@ import os
 import stat
 import subprocess
 
-from etcd3autodiscover import Etcd3Autodiscover 
+from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
-from time import sleep
 
 try:
     from subprocess import DEVNULL
