@@ -58,8 +58,8 @@ def attach(ctx,
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
                                      ca_cert=config['etcd']['ca_cert'],
-                                     cert_key=config['etcd']['cert_key'],
-                                     cert_cert=config['etcd']['cert_cert'],
+                                     cert_key=config['etcd']['key'],
+                                     cert_cert=config['etcd']['cert'],
                                      timeout=config['etcd']['timeout'])
             client = etcd.connect()
             if client is None:
