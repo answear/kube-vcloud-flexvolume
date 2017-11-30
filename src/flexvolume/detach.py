@@ -49,6 +49,10 @@ def detach(ctx,
                     ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
                             (volume, nodename)
                 )
+            # Make sure task is completed
+            if hasattr(is_disk_disconnected, 'id'):
+                Client.ctx.vca.block_until_completed(is_disk_disconnected)
+
             device_name, device_status = is_disk_disconnected
             if os.path.lexists(volume_symlink):
                 os.unlink(volume_symlink)

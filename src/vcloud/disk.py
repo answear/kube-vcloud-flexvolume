@@ -68,28 +68,7 @@ def attach_disk(ctx, vm_name, disk_name):
                 if disk_ref.name == disk_name:
                     task = vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
 
-                    if task:
-                        return True
-    except Exception as e:
-        pass
-    return False
-
-def attach_disk_t(ctx, vm_name, disk_name):
-    try:
-        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
-        vm = find_vm_in_vapp(ctx, vm_name)
-        if len(vm) > 0:
-            vm = vm[0]
-            vapp = ctx.vca.get_vapp(
-                    vdc,
-                    vm['vapp_name']
-            )
-            disk_refs = ctx.vca.get_diskRefs(vdc)
-            for disk_ref in disk_refs:
-                if disk_ref.name == disk_name:
-                    task = vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
-
-                    if task:
+                    if hasattr(task, 'id'):
                         return task
     except Exception as e:
         pass
@@ -130,7 +109,31 @@ def detach_disk(ctx, vm_name, disk_name):
             disk_refs = ctx.vca.get_diskRefs(vdc)
             for disk_ref in disk_refs:
                 if disk_ref.name == disk_name:
-                    vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
+                    task = vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
+
+                    if hasattr(task, 'id'):
+                        return task
+    except Exception as e:
+        pass
+    return False
+
+def detach_disk_b(ctx, vm_name, disk_name):
+    try:
+        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
+        vm = find_vm_in_vapp(ctx, vm_name)
+        if len(vm) > 0:
+            vm = vm[0]
+            vapp = ctx.vca.get_vapp(
+                    vdc,
+                    vm['vapp_name']
+            )
+            disk_refs = ctx.vca.get_diskRefs(vdc)
+            for disk_ref in disk_refs:
+                if disk_ref.name == disk_name:
+                    task = vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
+
+                    if task:
+                        assert ctx.vca.block_until_completed(task) == True
                     return True
     except Exception as e:
         pass
