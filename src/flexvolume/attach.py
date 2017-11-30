@@ -83,7 +83,7 @@ def attach(ctx,
                             ("Could not acquire lock after %0.fs. Giving up") % (absolute)
                     )
                 lock.refresh()
-                is_disk_attached = Disk.attach_disk_t(
+                is_disk_attached = Disk.attach_disk(
                         Client.ctx,
                         nodename,
                         volume
