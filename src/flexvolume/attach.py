@@ -1,6 +1,8 @@
 import os
 import stat
 import subprocess
+import etcd3autodiscover from Etcd3Autodiscover 
+from decimal import Decimal
 
 try:
     from subprocess import DEVNULL
@@ -22,12 +24,13 @@ def attach(ctx,
            params,
            nodename):
     params = json.loads(params)
+    config = Client.ctx.config
     try:
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
-        disk_storage = params['storage'] if 'storage' in params else Client.ctx.config['default_storage']
+        disk_storage = params['storage'] if 'storage' in params else config['default_storage']
         disk_bus_type = int(params['busType']) if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
 
@@ -52,11 +55,37 @@ def attach(ctx,
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
         if attached_vm is None:
-            is_disk_attached = Disk.attach_disk(
-                    Client.ctx,
-                    nodename,
-                    volume
-            )
+            etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                     ca_cert=config['etcd']['ca_cert'],
+                                     cert_key=config['etcd']['cert_key'],
+                                     cert_cert=config['etcd']['cert_cert'],
+                                     timeout=config['etcd']['timeout'])
+            client = etcd.connect()
+            if client is None:
+                raise Exception(
+                        ("Could not connect to etcd server '%s'") % (etcd.errstr())
+                )
+            lock_name = ("vcloud/%s/disk/attach") % (nodename)
+            with client.lock(lock_name, 175) as lock:
+                n = 0
+                absolute = 10
+                while lock.is_acquired() == False and n < 6:
+                    timeout = round(Decimal(4 * 1.8 ** n))
+                    absolute += timeout
+                    n += 1
+                    lock.acquire(timeout=timeout)
+
+                if lock.is_acquired() == False:
+                    raise Exception(
+                            ("Could not acquire lock after %0.fs. Giving up") % (absolute)
+                    )
+                lock.refresh()
+                is_disk_attached = Disk.attach_disk(
+                        Client.ctx,
+                        nodename,
+                        volume
+                )
+            lock.release()
             if is_disk_attached == False:
                 raise Exception(
                         ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
