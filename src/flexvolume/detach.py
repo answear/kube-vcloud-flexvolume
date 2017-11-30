@@ -17,6 +17,7 @@ from .cli import cli, error, info, GENERIC_SUCCESS
 def detach(ctx,
            volume,
            nodename):
+    config = Client.ctx.config
     try:
         is_logged_in = Client.login()
         if is_logged_in == False:
