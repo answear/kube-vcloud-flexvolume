@@ -104,7 +104,7 @@ def attach(ctx,
                     )
                 # Make sure task is completed
                 if hasattr(is_disk_attached, 'id'):
-                    ctx.vca.block_until_completed(task)
+                    Client.ctx.vca.block_until_completed(task)
 
                 device_name, device_status = is_disk_connected
                 if os.path.lexists(volume_symlink) == False:
