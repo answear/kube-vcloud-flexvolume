@@ -1,7 +1,8 @@
 import os
 import stat
 import subprocess
-import etcd3autodiscover from Etcd3Autodiscover 
+
+from etcd3autodiscover import Etcd3Autodiscover 
 from decimal import Decimal
 
 try:
