@@ -69,19 +69,23 @@ def attach(ctx,
                 )
             lock_name = ("vcloud/%s/disk/attach") % (nodename)
             lock_ttl = 120
-            with client.lock(lock_name, lock_ttl) as lock:
+            with client.lock(lock_name, ttl=lock_ttl) as lock:
                 n = 0
                 absolute = 10
                 while lock.is_acquired() == False and n < 6:
                     timeout = round(Decimal(4 * 1.29 ** n))
                     absolute += timeout
+                    print("Absolute: %0.fs" % (absolute))
                     n += 1
+                    print(lock.is_acquired())
                     lock.acquire(timeout=timeout)
 
                 if lock.is_acquired() == False:
                     raise Exception(
                             ("Could not acquire lock after %0.fs. Giving up") % (absolute)
                     )
+                else:
+                    print("Locked")
                 lock.refresh()
                 is_disk_attached = Disk.attach_disk(
                         Client.ctx,
