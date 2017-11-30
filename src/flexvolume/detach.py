@@ -50,8 +50,8 @@ def detach(ctx,
                             (volume, nodename)
                 )
             # Make sure task is completed
-            if hasattr(is_disk_disconnected, 'id'):
-                Client.ctx.vca.block_until_completed(is_disk_disconnected)
+            if hasattr(is_disk_detached, 'id'):
+                Client.ctx.vca.block_until_completed(is_disk_detached)
 
             device_name, device_status = is_disk_disconnected
             if os.path.lexists(volume_symlink):
