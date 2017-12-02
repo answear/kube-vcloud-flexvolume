@@ -4,6 +4,7 @@ import subprocess
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
+from time import sleep
 
 try:
     from subprocess import DEVNULL
@@ -65,14 +66,29 @@ def attach(ctx,
                 vm_name = vm[0]['vm_name']
 
                 if vm_name != nodename:
-                    is_disk_detached = Disk.detach_disk_b(
-                            Client.ctx,
-                            vm_name,
-                            volume)
-                    if is_disk_detached == False:
-                        raise Exception(
-                                ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
+                    # When node is marked unschedulable 'attach' command on a new node is called before 'detach' on the old one.
+                    # We poll volume for change attached_vm to None for total time 60s before we try to detach it.
+                    n = 0
+                    while n < 6:
+                        timeout = round(Decimal(4 * 1.29 ** n))
+                        n += 1
+                        sleep(timeout)
+                        disk_urn, attached_vm = Disk.find_disk(
+                                Disk.get_disks(Client.ctx),
+                                volume
                         )
+                        if attached_vm is None:
+                            break
+
+                    if attached_vm:
+                        is_disk_detached = Disk.detach_disk_b(
+                                Client.ctx,
+                                vm_name,
+                                volume)
+                        if is_disk_detached == False:
+                            raise Exception(
+                                    ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
+                            )
                     attached_vm = None
             else:
                 raise Exception(
