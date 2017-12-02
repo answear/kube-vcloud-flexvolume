@@ -87,7 +87,7 @@ def attach(ctx,
                             raise Exception(
                                     ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
                             )
-                       attached_vm = None
+                    attached_vm = None
             else:
                 raise Exception(
                         ("Could not find attached VM '%s'. Does the VM exist?") % (attached_vm)
