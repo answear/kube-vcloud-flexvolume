@@ -56,7 +56,7 @@ def delete_disk(ctx, name):
 def attach_disk(ctx, vm_name, disk_name):
     try:
         vdc = ctx.vca.get_vdc(ctx.config['vdc'])
-        vm = find_vm_in_vapp(ctx, vm_name)
+        vm = find_vm_in_vapp(ctx, vm_name=vm_name)
         if len(vm) > 0:
             vm = vm[0]
             vapp = ctx.vca.get_vapp(
@@ -99,7 +99,7 @@ def attach_disk_b(ctx, vm_name, disk_name):
 def detach_disk(ctx, vm_name, disk_name):
     try:
         vdc = ctx.vca.get_vdc(ctx.config['vdc'])
-        vm = find_vm_in_vapp(ctx, vm_name)
+        vm = find_vm_in_vapp(ctx, vm_name=vm_name)
         if len(vm) > 0:
             vm = vm[0]
             vapp = ctx.vca.get_vapp(
