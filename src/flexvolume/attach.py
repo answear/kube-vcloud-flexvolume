@@ -76,7 +76,7 @@ def attach(ctx,
                     attached_vm = None
             else:
                 raise Exception(
-                        ("Could not find VM '%s'. Does the VM exist?") % (attached_vm)
+                        ("Could not find attached VM '%s'. Does the VM exist?") % (attached_vm)
                 )
 
         if attached_vm is None:
