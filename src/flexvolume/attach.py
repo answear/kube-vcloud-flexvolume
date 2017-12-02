@@ -209,7 +209,7 @@ def isattached(ctx,
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
 
-        vm = VApp.find_vm_in_vapp(Client.ctx, nodename)
+        vm = VApp.find_vm_in_vapp(Client.ctx, vm_name=nodename)
         if len(vm) > 0:
             vm = vm[0]['vm']
             volume = params['volumeName']
