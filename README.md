@@ -15,11 +15,13 @@ The current works-for-me version is: [1.1.1a2](../../releases/tag/1.1.1a2).
 Cavetas
 =======
 
-Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands.
-Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.
+*  Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands. Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.
+
+*  When Kubernetes node is marked unschedulable (with `kubectl drain`) `operationExecutor` on a new node calls `AttachVolume` before `DetachVolume` is called on the old one. We periodically poll the volume to find out if is still attached, but vCloud deletes relation before asynchronous detach:disk task was finished.
+
 
 Description
-============
+===========
 
 vcloud-flexvolume provides a storage driver using vCloud's Independent Disk feature. The Independent Disk provides
 persistent disk storage which can be attached to instances running in vCloud Director environment.

@@ -26,7 +26,11 @@ setup(
         'click',
         'pyvcloud==18.2.1.dev45',
         'pyudev',
-        'bitmath'
+        'bitmath',
+        'etcd3autodiscover==0.1.0'
+    ],
+    dependency_links=[
+        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.1.0#egg=etcd3autodiscover-0.1.0'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
