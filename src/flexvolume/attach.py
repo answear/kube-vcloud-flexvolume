@@ -67,17 +67,18 @@ def attach(ctx,
 
                 if vm_name != nodename:
                     # When node is marked unschedulable 'attach' command on a new node is called before 'detach' on the old one.
-                    # We poll volume for change attached_vm to None 10 times before we try to detach it.
-                    i = 0
-                    while i < 10:
-                        sleep(1.2)
+                    # We poll volume for change attached_vm to None for total time 60s before we try to detach it.
+                    n = 0
+                    while n < 6:
+                        timeout = round(Decimal(4 * 1.29 ** n))
+                        n += 1
+                        sleep(timeout)
                         disk_urn, attached_vm = Disk.find_disk(
                                 Disk.get_disks(Client.ctx),
                                 volume
                         )
                         if attached_vm is None:
                             break
-                        i += 1
 
                     if attached_vm:
                         is_disk_detached = Disk.detach_disk_b(
