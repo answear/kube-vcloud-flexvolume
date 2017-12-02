@@ -57,7 +57,7 @@ def attach(ctx,
 
         if attached_vm:
             # Disk is in attached state
-            vm_details = Vapp.find_vm_in_vapp(
+            vm_details = VApp.find_vm_in_vapp(
                     Client.ctx,
                     vm_id=attached_vm)
             # Check if attached to current node
