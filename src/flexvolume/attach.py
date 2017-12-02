@@ -65,15 +65,29 @@ def attach(ctx,
                 vm_name = vm[0]['vm_name']
 
                 if vm_name != nodename:
-                    is_disk_detached = Disk.detach_disk_b(
-                            Client.ctx,
-                            vm_name,
-                            volume)
-                    if is_disk_detached == False:
-                        raise Exception(
-                                ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
+                    # When node is marked unschedulable 'attach' command on a new node is called before 'detach' on the old one.
+                    # We poll volume for change attached_vm to None 10 times before we try to detach it.
+                    i = 0
+                    while i < 10:
+                        sleep(1.2)
+                        disk_urn, attached_vm = Disk.find_disk(
+                                Disk.get_disks(Client.ctx),
+                                volume
                         )
-                    attached_vm = None
+                        if attached_vm is None:
+                            break
+                        i += 1
+
+                    if attached_vm:
+                        is_disk_detached = Disk.detach_disk_b(
+                                Client.ctx,
+                                vm_name,
+                                volume)
+                        if is_disk_detached == False:
+                            raise Exception(
+                                    ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
+                            )
+                       attached_vm = None
             else:
                 raise Exception(
                         ("Could not find attached VM '%s'. Does the VM exist?") % (attached_vm)
