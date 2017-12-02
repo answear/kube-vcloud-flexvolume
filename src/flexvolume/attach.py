@@ -2,6 +2,9 @@ import os
 import stat
 import subprocess
 
+from etcd3autodiscover import Etcd3Autodiscover
+from decimal import Decimal
+
 try:
     from subprocess import DEVNULL
 except ImportError:
@@ -22,12 +25,13 @@ def attach(ctx,
            params,
            nodename):
     params = json.loads(params)
+    config = Client.ctx.config
     try:
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
-        disk_storage = params['storage'] if 'storage' in params else Client.ctx.config['default_storage']
+        disk_storage = params['storage'] if 'storage' in params else config['default_storage']
         disk_bus_type = int(params['busType']) if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
 
@@ -51,25 +55,81 @@ def attach(ctx,
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
-        if attached_vm is None:
-            is_disk_attached = Disk.attach_disk(
+        if attached_vm:
+            # Disk is in attached state
+            vm = VApp.find_vm_in_vapp(
                     Client.ctx,
-                    nodename,
-                    volume
-            )
-            if is_disk_attached == False:
+                    vm_id=attached_vm)
+            # Check if attached to current node
+            if len(vm) > 0:
+                vm_name = vm[0]['vm_name']
+
+                if vm_name != nodename:
+                    is_disk_detached = Disk.detach_disk_b(
+                            Client.ctx,
+                            vm_name,
+                            volume)
+                    if is_disk_detached == False:
+                        raise Exception(
+                                ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
+                        )
+                    attached_vm = None
+            else:
                 raise Exception(
-                        ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
+                        ("Could not find attached VM '%s'. Does the VM exist?") % (attached_vm)
                 )
-            is_disk_connected = wait_for_connected_disk(60)
-            if len(is_disk_connected) == 0:
+
+        if attached_vm is None:
+            etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                     ca_cert=config['etcd']['ca_cert'],
+                                     cert_key=config['etcd']['key'],
+                                     cert_cert=config['etcd']['cert'],
+                                     timeout=config['etcd']['timeout'])
+            client = etcd.connect()
+            if client is None:
                 raise Exception(
-                        ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
-                                (volume, nodename)
+                        ("Could not connect to etcd server '%s'") % (etcd.errstr())
                 )
-            device_name, device_status = is_disk_connected
-            if os.path.lexists(volume_symlink) == False:
-                os.symlink(device_name, volume_symlink)
+            lock_name = ("vcloud/%s/disk/attach") % (nodename)
+            lock_ttl = 120
+            with client.lock(lock_name, ttl=lock_ttl) as lock:
+                n = 0
+                absolute = 10
+                while lock.is_acquired() == False and n < 6:
+                    timeout = round(Decimal(4 * 1.29 ** n))
+                    absolute += timeout
+                    n += 1
+                    lock.acquire(timeout=timeout)
+
+                if lock.is_acquired() == False:
+                    raise Exception(
+                            ("Could not acquire lock after %0.fs. Giving up") % (absolute)
+                    )
+                lock.refresh()
+                is_disk_attached = Disk.attach_disk(
+                        Client.ctx,
+                        nodename,
+                        volume
+                )
+                if is_disk_attached == False:
+                    raise Exception(
+                            ("Could not attach volume '%s' to node '%s'") % (volume, nodename)
+                    )
+                is_disk_connected = wait_for_connected_disk(60)
+                if len(is_disk_connected) == 0:
+                    raise Exception(
+                            ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
+                                    (volume, nodename)
+                    )
+                # Make sure task is completed
+                if hasattr(is_disk_attached, 'id'):
+                    Client.ctx.vca.block_until_completed(is_disk_attached)
+
+                device_name, device_status = is_disk_connected
+                if os.path.lexists(volume_symlink) == False:
+                    os.symlink(device_name, volume_symlink)
+            
+            lock.release()
         else:
             if os.path.lexists(volume_symlink):
                 device_name = os.readlink(volume_symlink)
@@ -88,7 +148,7 @@ def attach(ctx,
             else:
                 import inspect
                 raise Exception(
-                        ("Fatal error on line %d") % (inspect.currentframe().f_lineno)
+                        ("Fatal error on line %d. This should never happen") % (inspect.currentframe().f_lineno)
                 )
 
         partitions = disk_partitions(device_name.split('/')[-1])
