@@ -53,6 +53,7 @@ Install packages:
 Install the driver itself:
 
 ```
+git checkout 1.2.0b1
 python setup.py build
 sudo python setup.py install
 ```
@@ -60,7 +61,7 @@ sudo python setup.py install
 or
 
 ```
-pip install git+https://github.com/sysoperator/kube-vcloud-flexvolume.git
+pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b1
 ```
 
 Create a Kubernetes Pod such as:
