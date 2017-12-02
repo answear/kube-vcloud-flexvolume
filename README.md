@@ -19,6 +19,7 @@ Cavetas
 
 *  When Kubernetes node is marked unschedulable (with `kubectl drain`) `operationExecutor` on a new node calls `AttachVolume` before `DetachVolume` is called on the old one. We periodically poll the volume to find out if is still attached, but vCloud deletes relation before asynchronous detach:disk task was finished.
 
+
 Description
 ===========
 
