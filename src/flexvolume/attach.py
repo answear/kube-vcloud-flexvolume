@@ -67,13 +67,17 @@ def attach(ctx,
                 if vm_name != nodename:
                     is_disk_detached = Disk.detach_disk_b(
                             Client.ctx,
-                            vm_details['vm_name'],
+                            vm_name,
                             volume)
                     if is_disk_detached == False:
                         raise Exception(
-                                ("Could not detach volume '%s' from '%s'") % (volume, vm_details['vm_name'])
+                                ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
                         )
                     attached_vm = None
+            else:
+                raise Exception(
+                        ("Could not find VM '%s'. Does the VM exist?") % (attached_vm)
+                )
 
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
