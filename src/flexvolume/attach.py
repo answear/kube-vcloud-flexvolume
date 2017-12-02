@@ -57,20 +57,23 @@ def attach(ctx,
 
         if attached_vm:
             # Disk is in attached state
-            vm_details = VApp.find_vm_in_vapp(
+            vm = VApp.find_vm_in_vapp(
                     Client.ctx,
                     vm_id=attached_vm)
             # Check if attached to current node
-            if vm_details['vm_name'] != nodename:
-                is_disk_detached = Disk.detach_disk_b(
-                        Client.ctx,
-                        vm_details['vm_name'],
-                        volume)
-                if is_disk_detached == False:
-                    raise Exception(
-                            ("Could not detach volume '%s' from '%s'") % (volume, vm_details['vm_name'])
-                    )
-                attached_vm = None
+            if len(vm) > 0:
+                vm_name = vm[0]['vm_name']
+
+                if vm_name != nodename:
+                    is_disk_detached = Disk.detach_disk_b(
+                            Client.ctx,
+                            vm_details['vm_name'],
+                            volume)
+                    if is_disk_detached == False:
+                        raise Exception(
+                                ("Could not detach volume '%s' from '%s'") % (volume, vm_details['vm_name'])
+                        )
+                    attached_vm = None
 
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
