@@ -12,12 +12,13 @@ Highly experimental and under heavy development. Do not use on a system that you
 The current works-for-me version is: [1.2.0b1](../../releases/tag/1.2.0b1).
 
 
-Cavetas
+Caveats
 =======
 
 *  Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands. Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.
 
-*  When Kubernetes node is marked unschedulable (with `kubectl drain`) `operationExecutor` on a new node calls `AttachVolume` before `DetachVolume` is called on the old one. We periodically poll the volume to find out if is still attached, but vCloud deletes relation before asynchronous detach:disk task was finished.
+*  When Kubernetes node is marked unschedulable (with `kubectl drain`) `operationExecutor` on a new node calls `AttachVolume` before `DetachVolume` is called on the old one. We periodically poll the volume to find out if is still attached, but vCloud deletes relation before asynchronous detach:disk task was finished. This sometimes can result in throwing an exception "Could not attach volume '%s' to node '%s'" and repeating the attemp by Kubelet process.
+
 
 
 Description
