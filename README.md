@@ -15,11 +15,11 @@ The current works-for-me version is: [1.2.0b1](../../releases/tag/1.2.0b1).
 Caveats
 =======
 
-*  Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands. Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.
+*  Due to how vCloud works if you want to simultaneously attach/detach disks to/from same VM you should implement a global lock inside attach/detach commands. ~~Check [feature/etcd](../../tree/feature/etcd) branch for experimental implementation using etcd key-value store.~~ (Merged via pull request [#5](../../pr/5))
 
 *  When Kubernetes node is marked unschedulable (with `kubectl drain`) `operationExecutor` on a new node calls `AttachVolume` before `DetachVolume` is called on the old one. We periodically poll the volume to find out if is still attached, but vCloud deletes relation before asynchronous detach:disk task was finished. This sometimes can result in throwing an exception "Could not attach volume '%s' to node '%s'" and repeating the attemp by Kubelet process.
 
-
+*  Using busType:busSubType combination other than SCSI:VirtualSCSI can lead to unexpected behavior. For example you can attach more than one disk of default type (SCSI:lsilogic), but only the first one will be detected by Linux kernel.
 
 Description
 ===========
