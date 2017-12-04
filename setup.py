@@ -10,7 +10,7 @@ setup(
     author_email='piotr.mazurkiewicz@sysoperator.pl',
     license='MIT',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Plugins',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
