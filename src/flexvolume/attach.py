@@ -15,7 +15,7 @@ import click
 import json
 
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import disk_partitions, wait_for_connected_disk
+from vcloud.utils import disk_partitions, wait_for_connected_disk, size_to_bytes
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -35,6 +35,7 @@ def attach(ctx,
         disk_storage = params['storage'] if 'storage' in params else config['default_storage']
         disk_bus_type = int(params['busType']) if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
+        disk_need_resize = False
 
         disk_urn, attached_vm = Disk.find_disk(
                 Disk.get_disks(Client.ctx),
@@ -122,6 +123,22 @@ def attach(ctx,
                             ("Could not acquire lock after %0.fs. Giving up") % (absolute)
                     )
                 lock.refresh()
+
+                current_size = Disk.get_disk(Disk.get_disks(Client.ctx), 'testdisk')['size_bytes']
+                desired_size = size_to_bytes(params['size'])
+                if current_size < desired_size:
+                    disk_need_resize = True
+                    is_disk_resized = Disk.resize_disk(
+                            Client.ctx,
+                            volume,
+                            params['size']
+                    )
+                    if is_disk_resized == False:
+                        raise Exception(
+                                ("Could not resize volume '%s' from %d to %d bytes") % \
+                                        (volume, current_size, desired_size)
+                    lock.refresh()
+
                 is_disk_attached = Disk.attach_disk(
                         Client.ctx,
                         nodename,
@@ -144,7 +161,7 @@ def attach(ctx,
                 device_name, device_status = is_disk_connected
                 if os.path.lexists(volume_symlink) == False:
                     os.symlink(device_name, volume_symlink)
-            
+
             lock.release()
         else:
             if os.path.lexists(volume_symlink):
@@ -192,7 +209,21 @@ def attach(ctx,
                     device_name.split('/')[1],
                     partitions[0]
             )
-
+            if disk_need_resize:
+                try:
+                    # Resize partition:
+                    partno = partition[-1:]
+                    cmd_resize_partition = ("parted %s unit %% resizepart %s 100%%") % (device_name, partno)
+                    subprocess.check_call(
+                            cmd_resize_partition,
+                            shell=True,
+                            stdout=DEVNULL,
+                            stderr=DEVNULL
+                    )
+                except subprocess.CalledProcessError:
+                    raise Exception(
+                            ("Could not resize partition '%s' on device '%s'") % (partno, device_name)
+                    )
         success = {
             "status": "Success",
             "device": "%s" % partition

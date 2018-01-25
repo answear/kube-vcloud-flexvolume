@@ -1,11 +1,15 @@
 from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
+from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.utils import extract_id
 from vcloud.vapp import find_vm_in_vapp
 from vcloud.utils import size_to_bytes, bytes_to_size
 
 find_disk = \
     lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), [None, None])
+
+get_disk = \
+    lambda x, disk: next((i for i in x if i['name'] == disk), None)
 
 def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_type=None):
     """
@@ -19,7 +23,7 @@ def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_ty
     try:
         size = size_to_bytes(size)
         if size == 0:
-            raise
+            raise Exception("Param 'size' should be grater than 0")
         disk_resource = ctx.vca.add_disk(
                 ctx.config['vdc'],
                 name,
@@ -52,6 +56,33 @@ def delete_disk(ctx, name):
     except Exception as e:
         pass
     return result
+
+def resize_disk(ctx, name, size, timeout=30):
+    try:
+        size = size_to_bytes(size)
+        if size == 0:
+            raise Exception("Param 'size' should be greater than 0")
+        size = bytes(size)
+        disk_urn, attached_vm = find_disk(
+                get_disks(ctx),
+                name
+        )
+        if disk_urn is None:
+            raise Exception(
+                    ("Could not find disk '%s'") % (name)
+            )
+        result = ctx.vdc.update_disk(
+                name=name,
+                size=size
+        )
+        task = ctx.vdc.client.get_task_monitor().wait_for_success(
+                task=result, timeout=timeout
+        )
+        assert task.get('status') == TaskStatus.SUCCESS.value
+        return True
+    except Exception as e:
+        pass
+    return False
 
 def attach_disk(ctx, vm_name, disk_name):
     try:
