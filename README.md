@@ -9,7 +9,7 @@ Status
 ======
 
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
-The current works-for-me version is: [1.2.0b1](../../releases/tag/1.2.0b1).
+The current works-for-me version is: [1.2.0b2](../../releases/tag/1.2.0b2).
 
 
 Caveats
@@ -54,7 +54,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 1.2.0b1
+git checkout 1.2.0b2
 python setup.py build
 sudo python setup.py install
 ```
@@ -62,7 +62,7 @@ sudo python setup.py install
 or
 
 ```
-pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b1
+pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b2
 ```
 
 Create a Kubernetes Pod such as:
