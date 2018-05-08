@@ -9,7 +9,7 @@ Status
 ======
 
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
-The current works-for-me version is: [1.2.0b2](../../releases/tag/1.2.0b2).
+The current works-for-me version is: [1.2.0b3](../../releases/tag/1.2.0b3).
 
 
 Caveats
