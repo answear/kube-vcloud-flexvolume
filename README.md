@@ -65,6 +65,8 @@ or
 pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b2
 ```
 
+*  Restart kubelet process.
+
 Create a Kubernetes Pod such as:
 
 ```
