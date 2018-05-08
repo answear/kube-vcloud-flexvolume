@@ -54,7 +54,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 1.2.0b2
+git checkout 1.2.0b3
 python setup.py build
 sudo python setup.py install
 ```
@@ -62,7 +62,7 @@ sudo python setup.py install
 or
 
 ```
-pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b2
+pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.0b3
 ```
 
 *  Restart kubelet process.
