@@ -8,6 +8,8 @@ driver for Kubernetes.
 Status
 ======
 
+## ATTENTION: DO NOT USE THIS BRANCH. IT HAS BEEN ALREADY MERGED INTO MASTER.
+
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
 The current works-for-me version is: [1.1.1a2](../../releases/tag/1.1.1a2).
 
