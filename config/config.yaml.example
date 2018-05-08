@@ -10,7 +10,7 @@ vcloud:
   default_storage: T1
   etcd:
     host: etcd.internal
-	# You could leave below fields empty to not using TLS
+    # You could leave below fields empty to not using TLS
     ca_cert: /etc/etcd/ssl/ca.crt
     cert: /etc/etcd/ssl/etcd.crt
     key: /etc/etcd/ssl/etcd.key
