@@ -47,6 +47,8 @@ def login(session_id=None):
         ctx.vca.login(password=config['password'], org=config['org'], org_url=org_url)
         ctx.vca.login(token=ctx.vca.token, org=config['org'], org_url=ctx.vca.vcloud_session.org_url)
     except Exception as e:
+        #if config['debug'] == True:
+        #    print("Exception: %s\n") % (e)
         return False
     return True
 

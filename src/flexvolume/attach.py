@@ -97,6 +97,7 @@ def attach(ctx,
 
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                     port=config['etcd']['port'],
                                      ca_cert=config['etcd']['ca_cert'],
                                      cert_key=config['etcd']['key'],
                                      cert_cert=config['etcd']['cert'],
