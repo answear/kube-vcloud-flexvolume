@@ -21,11 +21,14 @@ Caveats
 
 *  Using busType:busSubType combination other than SCSI:VirtualSCSI can lead to unexpected behavior. For example you can attach more than one disk of default type (SCSI:lsilogic), but only the first one will be detected by Linux kernel.
 
+
 Description
 ===========
 
 vcloud-flexvolume provides a storage driver using vCloud's Independent Disk feature. The Independent Disk provides
 persistent disk storage which can be attached to instances running in vCloud Director environment.
+
+You can read more about Independent Disks [here](https://pubs.vmware.com/vcd-80/index.jsp?topic=/com.vmware.vcloud.api.sp.doc_90/GUID-ED825075-4278-486A-A1EB-FB47FE0226DA.html).
 
 
 Installation
