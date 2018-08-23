@@ -31,7 +31,8 @@ def detach(ctx,
                     ("Volume '%s' does not exist") % (volume)
             )
 
-        volume_symlink = ("/dev/block/%s") % (disk_urn)
+        volume_symlink = ("block/%s") % (disk_urn)
+        volume_symlink_full = ("/dev/%s") % (volume_symlink)
 
         if attached_vm is None:
             info(GENERIC_SUCCESS)
@@ -85,8 +86,13 @@ def detach(ctx,
                     Client.ctx.vca.block_until_completed(is_disk_detached)
 
                 device_name, device_status = is_disk_disconnected
-                if os.path.lexists(volume_symlink):
-                    os.unlink(volume_symlink)
+                if os.path.lexists(volume_symlink_full):
+                    device_name = os.readlink(volume_symlink_full)
+                    device_name_short = device_name.split('/')[-1]
+                    os.unlink(volume_symlink_full)
+                    udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
+                    if os.path.lexists(udev_rule_path):
+                        os.unlink(udev_rule_path)
         lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
