@@ -160,7 +160,7 @@ def attach(ctx,
             
             lock.release()
         else:
-            if os.path.lexists(volume_symlink_fullpath):
+            if os.path.lexists(volume_symlink_full):
                 device_name = "/dev/block/" + os.readlink(volume_symlink_full)
                 try:
                     mode = os.stat(device_name).st_mode
