@@ -162,6 +162,7 @@ def attach(ctx,
         else:
             if os.path.lexists(volume_symlink_full):
                 device_name = "/dev/block/" + os.readlink(volume_symlink_full)
+                device_name_short = device_name.split('/')[-1]
                 try:
                     mode = os.stat(device_name).st_mode
                     assert stat.S_ISBLK(mode) == True
