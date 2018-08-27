@@ -54,7 +54,8 @@ def attach(ctx,
                         ("Could not create volume '%s'") % (volume)
                 )
 
-        volume_symlink = ("/dev/block/%s") % (disk_urn)
+        volume_symlink = ("block/%s") % (disk_urn)
+        volume_symlink_full = ("/dev/%s") % (volume_symlink)
 
         if attached_vm:
             # Disk is in attached state
@@ -97,6 +98,7 @@ def attach(ctx,
 
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                     port=config['etcd']['port'],
                                      ca_cert=config['etcd']['ca_cert'],
                                      cert_key=config['etcd']['key'],
                                      cert_cert=config['etcd']['cert'],
@@ -142,13 +144,25 @@ def attach(ctx,
                     Client.ctx.vca.block_until_completed(is_disk_attached)
 
                 device_name, device_status = is_disk_connected
-                if os.path.lexists(volume_symlink) == False:
-                    os.symlink(device_name, volume_symlink)
+                if os.path.lexists(volume_symlink_full) == False:
+                    device_name_short = device_name.split('/')[-1]
+                    os.symlink("../" + device_name_short, volume_symlink_full)
+                    # Create udev rule to fix: https://github.com/sysoperator/kube-vcloud-flexvolume/issues/7
+                    # SUBSYSTEM=="block", ENV{DEVNAME}=="/dev/sdb", SYMLINK+="block/1a6f82c4-fcb2-45d7-86e9-eac40195ca64"
+                    udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
+                    with open(udev_rule_path, "w") as udev_rule:
+                        udev_rule.write(
+                            ('SUBSYSTEM=="block", ENV{DEVNAME}=="%s", SYMLINK+="%s"\n') % \
+                                    (device_name, volume_symlink)
+                        )
+                        udev_rule.close()
+
             
             lock.release()
         else:
-            if os.path.lexists(volume_symlink):
-                device_name = os.readlink(volume_symlink)
+            if os.path.lexists(volume_symlink_full):
+                device_name = "/dev/block/" + os.readlink(volume_symlink_full)
+                device_name_short = device_name.split('/')[-1]
                 try:
                     mode = os.stat(device_name).st_mode
                     assert stat.S_ISBLK(mode) == True
@@ -167,7 +181,7 @@ def attach(ctx,
                         ("Fatal error on line %d. This should never happen") % (inspect.currentframe().f_lineno)
                 )
 
-        partitions = disk_partitions(device_name.split('/')[-1])
+        partitions = disk_partitions(device_name_short)
         if len(partitions) == 0:
             try:
                 # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
@@ -232,7 +246,7 @@ def waitforattach(ctx,
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
         if os.path.lexists(volume_symlink):
-            device_name = os.readlink(volume_symlink)
+            device_name = "/dev/block/" + os.readlink(volume_symlink)
             try:
                 mode = os.stat(device_name).st_mode
                 assert stat.S_ISBLK(mode) == True
