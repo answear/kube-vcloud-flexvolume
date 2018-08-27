@@ -69,6 +69,7 @@ def detach(ctx,
                     nodename,
                     volume
             )
+            is_disk_disconnected = []
             if is_disk_detached == False:
                 raise Exception(
                         ("Could not detach volume '%s' from node '%s'") % \
@@ -84,15 +85,6 @@ def detach(ctx,
                 # Make sure task is completed
                 if hasattr(is_disk_detached, 'id'):
                     Client.ctx.vca.block_until_completed(is_disk_detached)
-
-                device_name, device_status = is_disk_disconnected
-                if os.path.lexists(volume_symlink_full):
-                    device_name = os.readlink(volume_symlink_full)
-                    device_name_short = device_name.split('/')[-1]
-                    os.unlink(volume_symlink_full)
-                    udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
-                    if os.path.lexists(udev_rule_path):
-                        os.unlink(udev_rule_path)
         lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
@@ -102,4 +94,14 @@ def detach(ctx,
         }
         error(failure)
     finally:
+        if len(is_disk_disconnected) == 2:
+            device_status = is_disk_disconnected[1]
+            if device_status == 'disconnected':
+                if os.path.lexists(volume_symlink_full):
+                    device_name = os.readlink(volume_symlink_full)
+                    device_name_short = device_name.split('/')[-1]
+                    os.unlink(volume_symlink_full)
+                udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
+                if os.path.exists(udev_rule_path):
+                    os.unlink(udev_rule_path)
         Client.logout()
