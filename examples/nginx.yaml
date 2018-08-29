@@ -21,6 +21,6 @@ spec:
         volumeName: "testdisk"
         size: "1Gi"
         storage: "T1"
-        busType: 6
+        busType: "6"
         busSubType: "VirtualSCSI"
         mountoptions: "relatime,nobarrier"
