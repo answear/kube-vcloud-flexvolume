@@ -24,7 +24,7 @@ setup(
     scripts=['src/vcloud-flexvolume'],
     install_requires=[
         'click',
-        'pyvcloud==19.2.0',
+        'pyvcloud==19.3.0',
         'pyudev',
         'bitmath',
         'etcd3autodiscover==0.1.0'
