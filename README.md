@@ -9,7 +9,7 @@ Status
 ======
 
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
-The current works-for-me version is: [1.2.2b1](../../releases/tag/1.2.2b1).
+The current works-for-me version is: [2.0.0b1](../../releases/tag/2.0.0b1).
 
 
 Caveats
@@ -42,30 +42,30 @@ Installation
 
 Install packages:
 
-*  python
-*  python-pip
-*  python-pip-whl
-*  python-setuptools
-*  python-flufl.enum
-*  python-lxml
-*  python-netaddr
-*  python-progressbar
-*  python-pyudev
-*  python-pyvmomi
-*  python-wheel
+*  python3
+*  python3-pip
+*  python3-pip-whl
+*  python3-setuptools
+*  python3-flufl.enum
+*  python3-lxml
+*  python3-netaddr
+*  python3-progressbar
+*  python3-pyudev
+*  python3-pyvmomi
+*  python3-wheel
 
 Install the driver itself:
 
 ```
-git checkout 1.2.2b1
-python setup.py build
-sudo python setup.py install
+git checkout 2.0.0b1
+python3 setup.py build
+sudo python3 setup.py install
 ```
 
 or
 
 ```
-pip install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@1.2.2b1
+pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.0.0b1
 ```
 
 *  Restart kubelet process.

@@ -1,3 +1,5 @@
+import requests
+
 from threading import local
 ctx = local()
 
@@ -8,9 +10,6 @@ ctx.config = config
 from pyvcloud.vcd.client import Client, BasicLoginCredentials
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcloudair import VCA
-import requests
-import pprint
 
 def login(session_id=None):
     client = Client(config['host'],
@@ -38,17 +37,9 @@ def login(session_id=None):
         ctx.client = client
         ctx.vdc = VDC(client, href=the_vdc.get('href'))
         ctx.token = client._session.headers['x-vcloud-authorization']
-        ctx.vca = VCA(host=config['host'],
-                      username=config['username'],
-                      service_type='vcd',
-                      version=config['api_version'],
-                      verify=config['verify_ssl_certs'],
-                      log=config['log'])
-        ctx.vca.login(password=config['password'], org=config['org'], org_url=org_url)
-        ctx.vca.login(token=ctx.vca.token, org=config['org'], org_url=ctx.vca.vcloud_session.org_url)
     except Exception as e:
-        #if config['debug'] == True:
-        #    print("Exception: %s\n") % (e)
+        if config['debug'] == True:
+            print("Exception: %s\n") % (e)
         return False
     return True
 
@@ -56,8 +47,8 @@ def logout():
     try:
         client = ctx.client
         client.logout()
-        vca = ctx.vca
-        vca.logout()
     except Exception as e:
+        if config['debug'] == True:
+            print("Exception: %s\n") % (e)
         return False
     return True

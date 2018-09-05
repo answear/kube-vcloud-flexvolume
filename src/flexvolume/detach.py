@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import click
 
+from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
 from vcloud.utils import wait_for_connected_disk
 from .cli import cli, error, info, GENERIC_SUCCESS
@@ -86,8 +87,17 @@ def detach(ctx,
                                 (volume, nodename)
                     )
                 # Make sure task is completed
-                if hasattr(is_disk_detached, 'id'):
-                    Client.ctx.vca.block_until_completed(is_disk_detached)
+                task = ctx.client.get_task_monitor().wait_for_status(
+                    task=is_disk_detached,
+                    timeout=60,
+                    poll_frequency=2,
+                    fail_on_statuses=None,
+                    expected_target_statuses=[
+                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                        TaskStatus.CANCELED
+                    ],
+                    callback=None)
+                assert task.get('status') == TaskStatus.SUCCESS.value
         lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
