@@ -43,8 +43,10 @@ def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_ty
         assert task.get('status') == TaskStatus.SUCCESS.value
         disk_id = extract_id(disk_resource[0].get('id'))
     except Exception as e:
-        raise
-        return ""
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            return ""
     return disk_id
 
 def delete_disk(ctx, name):
@@ -59,8 +61,10 @@ def delete_disk(ctx, name):
                 )
                 result.append(disk['id'])
     except Exception as e:
-        raise
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result
 
 def attach_disk(ctx, vm_name, disk_name, block=False):
@@ -90,8 +94,10 @@ def attach_disk(ctx, vm_name, disk_name, block=False):
                     else:
                         return result
     except Exception as e:
-        raise
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return False
 
 def detach_disk(ctx, vm_name, disk_name, block=False):
@@ -121,8 +127,10 @@ def detach_disk(ctx, vm_name, disk_name, block=False):
                     else:
                         return result
     except Exception as e:
-        raise
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return False
 
 def get_disks(ctx):
@@ -152,7 +160,10 @@ def get_disks(ctx):
 
             )
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result
 
 def get_vm_disk_relation(ctx):
@@ -172,5 +183,8 @@ def get_vm_disk_relation(ctx):
                 }
             )
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result

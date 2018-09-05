@@ -30,5 +30,8 @@ def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
                     )
                     break
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result
