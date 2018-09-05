@@ -100,7 +100,7 @@ def detach(ctx,
         if len(is_disk_disconnected) == 2:
             device_status = is_disk_disconnected[1]
             if device_status == 'disconnected':
-                if os.path.lexists(volume_symlink_full)
+                if os.path.lexists(volume_symlink_full):
                     os.unlink(volume_symlink_full)
                 udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
                 if os.path.exists(udev_rule_path):
