@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
@@ -16,7 +16,7 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3.5'
     ],
     keywords='',
     package_dir={'': 'src'},
@@ -24,13 +24,13 @@ setup(
     scripts=['src/vcloud-flexvolume'],
     install_requires=[
         'click',
-        'pyvcloud==18.2.2',
+        'pyvcloud==19.3.0',
         'pyudev',
         'bitmath',
-        'etcd3autodiscover==0.1.0'
+        'etcd3autodiscover==0.2.0'
     ],
     dependency_links=[
-        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.1.0#egg=etcd3autodiscover-0.1.0'
+        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.2.0#egg=etcd3autodiscover-0.2.0'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
