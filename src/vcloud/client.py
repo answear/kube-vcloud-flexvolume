@@ -12,9 +12,17 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 
 def login(session_id=None):
+    log_requests = True if config['log'] == True else False
+    log_headers = True if config['log'] == True else False
+    log_bodies = True if config['log'] == True else False
+
     client = Client(config['host'],
                     api_version=config['api_version'],
-                    verify_ssl_certs=config['verify_ssl_certs'])
+                    verify_ssl_certs=config['verify_ssl_certs'],
+                    log_file=config['log_file'],
+                    log_requests=log_requests,
+                    log_headers=log_headers,
+                    log_bodies=log_bodies)
 
     if not config['verify_ssl_certs']:
         requests.packages.urllib3.disable_warnings()
