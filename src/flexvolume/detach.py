@@ -1,11 +1,13 @@
 import os
 import stat
+import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
 
 import click
 
+from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
 from vcloud.utils import wait_for_connected_disk
 from .cli import cli, error, info, GENERIC_SUCCESS
@@ -34,6 +36,9 @@ def detach(ctx,
         volume_symlink = ("block/%s") % (disk_urn)
         volume_symlink_full = ("/dev/%s") % (volume_symlink)
 
+        if os.path.lexists(volume_symlink_full):
+            device_name = os.readlink(volume_symlink_full)
+            device_name_short = device_name.split('/')[-1]
         if attached_vm is None:
             info(GENERIC_SUCCESS)
 
@@ -83,14 +88,26 @@ def detach(ctx,
                                 (volume, nodename)
                     )
                 # Make sure task is completed
-                if hasattr(is_disk_detached, 'id'):
-                    Client.ctx.vca.block_until_completed(is_disk_detached)
+                task = Client.ctx.client.get_task_monitor().wait_for_status(
+                    task=is_disk_detached,
+                    timeout=60,
+                    poll_frequency=2,
+                    fail_on_statuses=None,
+                    expected_target_statuses=[
+                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                        TaskStatus.CANCELED
+                    ],
+                    callback=None)
+                assert task.get('status') == TaskStatus.SUCCESS.value
         lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
@@ -98,8 +115,6 @@ def detach(ctx,
             device_status = is_disk_disconnected[1]
             if device_status == 'disconnected':
                 if os.path.lexists(volume_symlink_full):
-                    device_name = os.readlink(volume_symlink_full)
-                    device_name_short = device_name.split('/')[-1]
                     os.unlink(volume_symlink_full)
                 udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
                 if os.path.exists(udev_rule_path):

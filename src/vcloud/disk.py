@@ -1,5 +1,9 @@
+import vcloud.client as Client
+
+from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
+from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.utils import extract_id
 from vcloud.vapp import find_vm_in_vapp
 from vcloud.utils import size_to_bytes, bytes_to_size
@@ -20,21 +24,31 @@ def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_ty
         size = size_to_bytes(size)
         if size == 0:
             raise
-        disk_resource = ctx.vca.add_disk(
-                ctx.config['vdc'],
-                name,
+        disk_resource = ctx.vdc.create_disk(
+                name=name,
                 size=size,
                 storage_profile_name=storage_profile_name,
-                bus_type=bus_type,
+                bus_type=str(bus_type),
                 bus_sub_type=bus_sub_type
         )
-        tasks = disk_resource[1].get_Tasks()
+        task = ctx.client.get_task_monitor().wait_for_status(
+            task=disk_resource.Tasks.Task[0],
+            timeout=60,
+            poll_frequency=2,
+            fail_on_statuses=None,
+            expected_target_statuses=[
+                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                TaskStatus.CANCELED
+            ],
+            callback=None)
 
-        if tasks:
-            disk_id = disk_resource[1].get_id()
-            assert ctx.vca.block_until_completed(tasks[0]) == True
+        assert task.get('status') == TaskStatus.SUCCESS.value
+        disk_id = extract_id(disk_resource[0].get('id'))
     except Exception as e:
-        return ""
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            return ""
     return disk_id
 
 def delete_disk(ctx, name):
@@ -43,100 +57,82 @@ def delete_disk(ctx, name):
         disks = get_disks(ctx)
         for disk in disks:
             if disk['name'] == name:
-                ctx.vca.delete_disk(
-                        ctx.config['vdc'],
+                ctx.vdc.delete_disk(
                         name,
                         disk['id']
                 )
                 result.append(disk['id'])
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result
 
-def attach_disk(ctx, vm_name, disk_name):
+def attach_disk(ctx, vm_name, disk_name, block=False):
     try:
-        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
         vm = find_vm_in_vapp(ctx, vm_name=vm_name)
         if len(vm) > 0:
             vm = vm[0]
-            vapp = ctx.vca.get_vapp(
-                    vdc,
-                    vm['vapp_name']
-            )
-            disk_refs = ctx.vca.get_diskRefs(vdc)
-            for disk_ref in disk_refs:
-                if disk_ref.name == disk_name:
-                    task = vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
-
-                    if hasattr(task, 'id'):
-                        return task
+            vapp = ctx.vdc.get_vapp(vm['vapp_name'])
+            the_vapp = VApp(ctx.client, vm['vapp_name'], resource=vapp)
+            disks = get_disks(ctx)
+            for disk in disks:
+                if disk['name'] == disk_name:
+                    result = the_vapp.attach_disk_to_vm(disk['href'], vm['vm_name'])
+                    if block == True:
+                        task = ctx.client.get_task_monitor().wait_for_status(
+                            task=result,
+                            timeout=60,
+                            poll_frequency=2,
+                            fail_on_statuses=None,
+                            expected_target_statuses=[
+                                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                                TaskStatus.CANCELED
+                            ],
+                            callback=None)
+                        assert task.get('status') == TaskStatus.SUCCESS.value
+                        return True
+                    else:
+                        return result
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return False
 
-def attach_disk_b(ctx, vm_name, disk_name):
+def detach_disk(ctx, vm_name, disk_name, block=False):
     try:
-        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
-        vm = find_vm_in_vapp(ctx, vm_name)
-        if len(vm) > 0:
-            vm = vm[0]
-            vapp = ctx.vca.get_vapp(
-                    vdc,
-                    vm['vapp_name']
-            )
-            disk_refs = ctx.vca.get_diskRefs(vdc)
-            for disk_ref in disk_refs:
-                if disk_ref.name == disk_name:
-                    task = vapp.attach_disk_to_vm(vm['vm_name'], disk_ref)
-
-                    if task:
-                        assert ctx.vca.block_until_completed(task) == True
-                    return True
-    except Exception as e:
-        pass
-    return False
-
-def detach_disk(ctx, vm_name, disk_name):
-    try:
-        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
         vm = find_vm_in_vapp(ctx, vm_name=vm_name)
         if len(vm) > 0:
             vm = vm[0]
-            vapp = ctx.vca.get_vapp(
-                    vdc,
-                    vm['vapp_name']
-            )
-            disk_refs = ctx.vca.get_diskRefs(vdc)
-            for disk_ref in disk_refs:
-                if disk_ref.name == disk_name:
-                    task = vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
-
-                    if hasattr(task, 'id'):
-                        return task
+            vapp = ctx.vdc.get_vapp(vm['vapp_name'])
+            the_vapp = VApp(ctx.client, vm['vapp_name'], resource=vapp)
+            disks = get_disks(ctx)
+            for disk in disks:
+                if disk['name'] == disk_name:
+                    result = the_vapp.detach_disk_from_vm(disk['href'], vm['vm_name'])
+                    if block == True:
+                        task = ctx.client.get_task_monitor().wait_for_status(
+                            task=result,
+                            timeout=60,
+                            poll_frequency=2,
+                            fail_on_statuses=None,
+                            expected_target_statuses=[
+                                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                                TaskStatus.CANCELED
+                            ],
+                            callback=None)
+                        assert task.get('status') == TaskStatus.SUCCESS.value
+                        return True
+                    else:
+                        return result
     except Exception as e:
-        pass
-    return False
-
-def detach_disk_b(ctx, vm_name, disk_name):
-    try:
-        vdc = ctx.vca.get_vdc(ctx.config['vdc'])
-        vm = find_vm_in_vapp(ctx, vm_name)
-        if len(vm) > 0:
-            vm = vm[0]
-            vapp = ctx.vca.get_vapp(
-                    vdc,
-                    vm['vapp_name']
-            )
-            disk_refs = ctx.vca.get_diskRefs(vdc)
-            for disk_ref in disk_refs:
-                if disk_ref.name == disk_name:
-                    task = vapp.detach_disk_from_vm(vm['vm_name'], disk_ref)
-
-                    if task:
-                        assert ctx.vca.block_until_completed(task) == True
-                    return True
-    except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return False
 
 def get_disks(ctx):
@@ -144,34 +140,34 @@ def get_disks(ctx):
     attached_vm = \
         lambda x, disk: next((i['vm'] for i in x if i['disk'] == disk), None)
     try:
-        resource_type = 'disk'
-        query = ctx.client.get_typed_query(
-                resource_type,
-                query_result_format=QueryResultFormat.ID_RECORDS)
-        disks = list(query.execute())
+        disks = ctx.vdc.get_disks()
         disks_relation = get_vm_disk_relation(ctx)
         for disk in disks:
-            if disk.get('vdcName') != ctx.config['vdc']:
-                continue
             disk_id = extract_id(disk.get('id'))
             result.append(
                 {
                     'name': disk.get('name'),
                     'id': disk_id,
+                    'href': disk.get('href'),
                     'bus_type': int(disk.get('busType')),
                     'bus_sub_type': disk.get('busSubType'),
-                    'size_bytes': int(disk.get('sizeB')),
+                    'size_bytes': int(disk.get('size')),
                     'size_human': bytes_to_size(
-                            int(disk.get('sizeB'))
+                            int(disk.get('size'))
                     ),
-                    'status': disk.get('status'),
+                    'status': VCLOUD_STATUS_MAP.get(int(disk.get('status'))),
                     'attached_vm': attached_vm(disks_relation, disk_id),
-                    'vdc': extract_id(disk.get('vdc'))
+                    'vdc': extract_id(ctx.vdc.resource.get('id'))
                 }
 
             )
+        # Refresh session after Typed Query
+        Client.login(session_id=ctx.token)
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result
 
 def get_vm_disk_relation(ctx):
@@ -191,5 +187,8 @@ def get_vm_disk_relation(ctx):
                 }
             )
     except Exception as e:
-        pass
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
     return result

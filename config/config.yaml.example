@@ -6,6 +6,7 @@ vcloud:
   password: <PASSWORD>
   verify_ssl_certs: False
   log: True
+  log_file: /var/log/pyvcloud.log
   api_version: '27.0'
   default_storage: T1
   etcd:
@@ -16,3 +17,4 @@ vcloud:
     cert: /etc/etcd/ssl/etcd.crt
     key: /etc/etcd/ssl/etcd.key
     timeout: 5
+  debug: False

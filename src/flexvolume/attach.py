@@ -1,6 +1,7 @@
 import os
 import stat
 import subprocess
+import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
@@ -14,6 +15,7 @@ except ImportError:
 import click
 import json
 
+from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
 from vcloud.utils import disk_partitions, wait_for_connected_disk
 from .cli import cli, error, info
@@ -33,7 +35,7 @@ def attach(ctx,
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
         disk_storage = params['storage'] if 'storage' in params else config['default_storage']
-        disk_bus_type = int(params['busType']) if 'busType' in params else None
+        disk_bus_type = params['busType'] if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
 
         disk_urn, attached_vm = Disk.find_disk(
@@ -82,10 +84,11 @@ def attach(ctx,
                             break
 
                     if attached_vm:
-                        is_disk_detached = Disk.detach_disk_b(
+                        is_disk_detached = Disk.detach_disk(
                                 Client.ctx,
                                 vm_name,
-                                volume)
+                                volume,
+                                block=True)
                         if is_disk_detached == False:
                             raise Exception(
                                     ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
@@ -140,8 +143,17 @@ def attach(ctx,
                                     (volume, nodename)
                     )
                 # Make sure task is completed
-                if hasattr(is_disk_attached, 'id'):
-                    Client.ctx.vca.block_until_completed(is_disk_attached)
+                task = Client.ctx.client.get_task_monitor().wait_for_status(
+                    task=is_disk_attached,
+                    timeout=60,
+                    poll_frequency=2,
+                    fail_on_statuses=None,
+                    expected_target_statuses=[
+                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                        TaskStatus.CANCELED
+                    ],
+                    callback=None)
+                assert task.get('status') == TaskStatus.SUCCESS.value
 
                 device_name, device_status = is_disk_connected
                 if os.path.lexists(volume_symlink_full) == False:
@@ -215,7 +227,10 @@ def attach(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
@@ -279,7 +294,10 @@ def waitforattach(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
@@ -321,7 +339,10 @@ def isattached(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:

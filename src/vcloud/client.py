@@ -1,3 +1,5 @@
+import requests
+
 from threading import local
 ctx = local()
 
@@ -8,14 +10,19 @@ ctx.config = config
 from pyvcloud.vcd.client import Client, BasicLoginCredentials
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcloudair import VCA
-import requests
-import pprint
 
 def login(session_id=None):
+    log_requests = True if config['log'] == True else False
+    log_headers = True if config['log'] == True else False
+    log_bodies = True if config['log'] == True else False
+
     client = Client(config['host'],
                     api_version=config['api_version'],
-                    verify_ssl_certs=config['verify_ssl_certs'])
+                    verify_ssl_certs=config['verify_ssl_certs'],
+                    log_file=config['log_file'],
+                    log_requests=log_requests,
+                    log_headers=log_headers,
+                    log_bodies=log_bodies)
 
     if not config['verify_ssl_certs']:
         requests.packages.urllib3.disable_warnings()
@@ -38,17 +45,9 @@ def login(session_id=None):
         ctx.client = client
         ctx.vdc = VDC(client, href=the_vdc.get('href'))
         ctx.token = client._session.headers['x-vcloud-authorization']
-        ctx.vca = VCA(host=config['host'],
-                      username=config['username'],
-                      service_type='vcd',
-                      version=config['api_version'],
-                      verify=config['verify_ssl_certs'],
-                      log=config['log'])
-        ctx.vca.login(password=config['password'], org=config['org'], org_url=org_url)
-        ctx.vca.login(token=ctx.vca.token, org=config['org'], org_url=ctx.vca.vcloud_session.org_url)
     except Exception as e:
-        #if config['debug'] == True:
-        #    print("Exception: %s\n") % (e)
+        if config['debug'] == True:
+            print("Exception: {}\n".format(e))
         return False
     return True
 
@@ -56,8 +55,8 @@ def logout():
     try:
         client = ctx.client
         client.logout()
-        vca = ctx.vca
-        vca.logout()
     except Exception as e:
+        if config['debug'] == True:
+            print("Exception: {}\n".format(e))
         return False
     return True

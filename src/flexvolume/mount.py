@@ -3,6 +3,7 @@ import stat
 import subprocess
 import json
 import click
+import sys
 
 try:
     from subprocess import DEVNULL
@@ -46,7 +47,7 @@ def mountdevice(ctx,
         process = subprocess.Popen(['blkid', '-o', 'value', '-s', 'TYPE', mountdev], stdout=subprocess.PIPE)
         fstype, err = process.communicate()
         fstype = fstype.strip()
-        if fstype == "":
+        if fstype.decode() == "":
             fstype = params['kubernetes.io/fsType']
             try:
                 subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
@@ -73,7 +74,10 @@ def mountdevice(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
 
