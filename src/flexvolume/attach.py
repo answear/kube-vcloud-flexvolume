@@ -143,7 +143,7 @@ def attach(ctx,
                                     (volume, nodename)
                     )
                 # Make sure task is completed
-                task = ctx.client.get_task_monitor().wait_for_status(
+                task = Client.ctx.client.get_task_monitor().wait_for_status(
                     task=is_disk_attached,
                     timeout=60,
                     poll_frequency=2,
