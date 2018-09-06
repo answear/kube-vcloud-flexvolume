@@ -24,13 +24,12 @@ setup(
     scripts=['src/vcloud-flexvolume'],
     install_requires=[
         'click',
-        'pyvcloud==19.3.0',
-        'pyudev',
+        'pyvcloud>=19.3.0,<19.4',
         'bitmath',
-        'etcd3autodiscover==0.2.0'
+        'etcd3autodiscover>=0.2.0'
     ],
     dependency_links=[
-        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.2.0#egg=etcd3autodiscover-0.2.0'
+        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.2.1#egg=etcd3autodiscover-0.2.1'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
