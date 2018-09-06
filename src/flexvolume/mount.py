@@ -47,7 +47,7 @@ def mountdevice(ctx,
         process = subprocess.Popen(['blkid', '-o', 'value', '-s', 'TYPE', mountdev], stdout=subprocess.PIPE)
         fstype, err = process.communicate()
         fstype = fstype.strip()
-        if fstype == "":
+        if fstype.decode() == "":
             fstype = params['kubernetes.io/fsType']
             try:
                 subprocess.check_call(["mkfs", "-t", fstype, mountdev], stdout=DEVNULL, stderr=DEVNULL)
