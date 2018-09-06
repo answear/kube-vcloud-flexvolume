@@ -1,5 +1,6 @@
 import os
 import stat
+import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
@@ -103,7 +104,7 @@ def detach(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": ("Error on line %d in function %s: %s") % (sys.exc_info()[-1].tb_lineno, type(e).__name__, e)
         }
         error(failure)
     finally:

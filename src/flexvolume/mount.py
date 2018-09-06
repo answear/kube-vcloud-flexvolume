@@ -3,6 +3,7 @@ import stat
 import subprocess
 import json
 import click
+import sys
 
 try:
     from subprocess import DEVNULL
@@ -73,7 +74,7 @@ def mountdevice(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": ("Error on line %d in function %s: %s") % (sys.exc_info()[-1].tb_lineno, type(e).__name__, e)
         }
         error(failure)
 
