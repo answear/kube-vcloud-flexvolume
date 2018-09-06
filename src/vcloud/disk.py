@@ -26,7 +26,7 @@ def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_ty
                 name=name,
                 size=size,
                 storage_profile_name=storage_profile_name,
-                bus_type=bus_type,
+                bus_type=str(bus_type),
                 bus_sub_type=bus_sub_type
         )
         task = ctx.client.get_task_monitor().wait_for_status(
