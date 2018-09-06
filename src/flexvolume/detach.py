@@ -104,7 +104,10 @@ def detach(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": ("Error on line %d in function %s: %s") % (sys.exc_info()[-1].tb_lineno, type(e).__name__, e)
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
