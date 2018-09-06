@@ -1,3 +1,5 @@
+import vcloud.client as Client
+
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
@@ -159,6 +161,8 @@ def get_disks(ctx):
                 }
 
             )
+        # Refresh session after Typed Query
+        Client.login(session_id=ctx.token)
     except Exception as e:
         if ctx.config['debug'] == True:
             raise

@@ -9,7 +9,7 @@ Status
 ======
 
 Highly experimental and under heavy development. Do not use on a system that you care about the data.
-The current works-for-me version is: [2.0.1b1](../../releases/tag/2.0.1b1).
+The current works-for-me version is: [2.0.2b1](../../releases/tag/2.0.2b1).
 
 
 Caveats
@@ -55,7 +55,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.0.1b1
+git checkout 2.0.2b1
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -63,7 +63,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.0.1b1
+pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.0.2b1
 ```
 
 *  Restart kubelet process.

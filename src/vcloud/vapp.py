@@ -1,3 +1,5 @@
+import vcloud.client as Client
+
 from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
 from pyvcloud.vcd.utils import extract_id
@@ -29,6 +31,8 @@ def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
                         }
                     )
                     break
+        # Refresh session after Typed Query
+        Client.login(session_id=ctx.token)
     except Exception as e:
         if ctx.config['debug'] == True:
             raise

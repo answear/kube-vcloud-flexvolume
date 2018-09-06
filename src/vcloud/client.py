@@ -47,7 +47,7 @@ def login(session_id=None):
         ctx.token = client._session.headers['x-vcloud-authorization']
     except Exception as e:
         if config['debug'] == True:
-            print("Exception: %s\n") % (e)
+            print("Exception: {}\n".format(e))
         return False
     return True
 
@@ -57,6 +57,6 @@ def logout():
         client.logout()
     except Exception as e:
         if config['debug'] == True:
-            print("Exception: %s\n") % (e)
+            print("Exception: {}\n".format(e))
         return False
     return True
