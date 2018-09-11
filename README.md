@@ -21,6 +21,8 @@ Caveats
 
 *  Using busType:busSubType combination other than SCSI:VirtualSCSI can lead to unexpected behavior. For example you can attach more than one disk of default type (SCSI:lsilogic), but only the first one will be detected by Linux kernel.
 
+*  When something goes wrong during disk attaching and the driver throws an exception the udev rules required for restoring symlinks after reboot might not be generated. This can result in similar behaviour to one described in [this](../../issues/7) issue. The code tries to minimize the chances of this happening. If the problem occurs, please fill the bug report.
+
 
 Description
 ===========
