@@ -8,8 +8,8 @@ driver for Kubernetes.
 Status
 ======
 
-Highly experimental and under heavy development. Do not use on a system that you care about the data.
-The current works-for-me version is: [2.0.3b1](../../releases/tag/2.0.3b1).
+Successfully run this driver on production Kubernetes cluster for over half a year without any loose of data.
+The current Release Candidate is: [2.1.0rc1](../../releases/tag/2.1.0rc1).
 
 
 Caveats
@@ -57,7 +57,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.0.3b1
+git checkout 2.1.0rc1
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -65,7 +65,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.0.3b1
+pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.1.0rc1
 ```
 
 *  Restart kubelet process.
@@ -78,6 +78,13 @@ cat examples/nginx.yaml | kubectl apply -f -
 
 The driver will create an independent disk with name "testdisk" and size 1Gi under storage profile "T1".
 The volume will also be mounted as /data inside the container.
+
+
+Upgrading
+=========
+
+*  Install the newest driver newest newest newest using git or pip.
+*  Apply any changes in example [config file](config/config.yaml.example) to your local copy.
 
 
 Options
