@@ -83,7 +83,7 @@ The volume will also be mounted as /data inside the container.
 Upgrading
 =========
 
-*  Install the newest driver newest newest newest using git or pip.
+*  Install the newest driver version using git or pip.
 *  Apply any changes in example [config file](config/config.yaml.example) to your local copy.
 
 
