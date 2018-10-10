@@ -17,7 +17,7 @@ import json
 
 from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import disk_partitions, wait_for_connected_disk
+from vcloud.utils import disk_partitions, wait_for_connected_disk, DiskTimeoutException
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -138,7 +138,7 @@ def attach(ctx,
                     )
                 is_disk_connected = wait_for_connected_disk(60)
                 if len(is_disk_connected) == 0:
-                    raise Exception(
+                    raise DiskTimeoutException(
                             ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
                                     (volume, nodename)
                     )
@@ -260,6 +260,7 @@ def waitforattach(ctx,
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
+        partitions = []
         if os.path.lexists(volume_symlink):
             device_name = "/dev/block/" + os.readlink(volume_symlink)
             try:
@@ -274,7 +275,7 @@ def waitforattach(ctx,
                         ("Device '%s' exists but is not a block device") % \
                                 (device_name)
                 )
-        partitions = disk_partitions(device_name.split('/')[-1])
+            partitions = disk_partitions(device_name.split('/')[-1])
         attached = False
         for part in partitions:
             if part == mountdev.split('/')[-1]:

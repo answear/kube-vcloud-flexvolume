@@ -9,7 +9,7 @@ import click
 
 from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import wait_for_connected_disk
+from vcloud.utils import wait_for_connected_disk, DiskTimeoutException
 from .cli import cli, error, info, GENERIC_SUCCESS
 
 @cli.command(short_help='detach the volume from the node')
@@ -41,7 +41,18 @@ def detach(ctx,
             device_name_short = device_name.split('/')[-1]
         if attached_vm is None:
             info(GENERIC_SUCCESS)
+        else
+            vm = VApp.find_vm_in_vapp(
+                    Client.ctx,
+                    vm_id=attached_vm)
+            # Check if attached to any node but not to current one
+            vm_name = vm[0]['vm_name']
 
+            # If not return GENERIC_SUCCESS
+            if vm_name != nodename:
+                info(GENERIC_SUCCESS)
+
+        # Process normal detach
         etcd = Etcd3Autodiscover(host=config['etcd']['host'],
                                  port=config['etcd']['port'],
                                  ca_cert=config['etcd']['ca_cert'],
@@ -83,7 +94,7 @@ def detach(ctx,
             else:
                 is_disk_disconnected = wait_for_connected_disk(60)
                 if len(is_disk_disconnected) == 0:
-                    raise Exception(
+                    raise DiskTimeoutException(
                         ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
                                 (volume, nodename)
                     )

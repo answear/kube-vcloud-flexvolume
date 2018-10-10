@@ -58,3 +58,6 @@ def wait_for_connected_disk(timeout=600):
             result = [device.device_node, 'disconnected']
             break
     return result
+
+class DiskTimeoutException(Exception):
+    pass
