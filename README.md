@@ -9,7 +9,7 @@ Status
 ======
 
 Successfully run this driver on production Kubernetes cluster for over half a year without any loose of data.
-The current Release Candidate is: [2.1.0rc1](../../releases/tag/2.1.0rc1).
+The current Release Candidate is: [2.1.0rc2](../../releases/tag/2.1.0rc2).
 
 
 Caveats
@@ -57,7 +57,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.1.0rc1
+git checkout 2.1.0rc2
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -65,7 +65,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.1.0rc1
+pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.1.0rc2
 ```
 
 *  Restart kubelet process.
