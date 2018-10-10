@@ -21,6 +21,7 @@ def detach(ctx,
            nodename):
     config = Client.ctx.config
     try:
+        is_disk_disconnected = []
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
@@ -41,7 +42,7 @@ def detach(ctx,
             device_name_short = device_name.split('/')[-1]
         if attached_vm is None:
             info(GENERIC_SUCCESS)
-        else
+        else:
             vm = VApp.find_vm_in_vapp(
                     Client.ctx,
                     vm_id=attached_vm)
@@ -85,7 +86,6 @@ def detach(ctx,
                     nodename,
                     volume
             )
-            is_disk_disconnected = []
             if is_disk_detached == False:
                 raise Exception(
                         ("Could not detach volume '%s' from node '%s'") % \
