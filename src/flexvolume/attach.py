@@ -156,8 +156,8 @@ def attach(ctx,
                 assert task.get('status') == TaskStatus.SUCCESS.value
 
                 device_name, device_status = is_disk_connected
+                device_name_short = device_name.split('/')[-1]
                 if os.path.lexists(volume_symlink_full) == False:
-                    device_name_short = device_name.split('/')[-1]
                     os.symlink("../" + device_name_short, volume_symlink_full)
                     # Create udev rule to fix: https://github.com/sysoperator/kube-vcloud-flexvolume/issues/7
                     # SUBSYSTEM=="block", ENV{DEVNAME}=="/dev/sdb", SYMLINK+="block/1a6f82c4-fcb2-45d7-86e9-eac40195ca64"
@@ -168,7 +168,6 @@ def attach(ctx,
                                     (device_name, volume_symlink)
                         )
                         udev_rule.close()
-
             
             lock.release()
         else:
