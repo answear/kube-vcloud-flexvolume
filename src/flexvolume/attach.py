@@ -160,18 +160,18 @@ def attach(ctx,
                 disk_path = get_disk_path(device_name)
                 disk_path_short = disk_path.split('/')[-1]
                 if os.path.lexists(volume_symlink_full) == False:
-                    os.symlink("../disk/by-path/" + disk_path_short, volume_symlink_full)
+                    os.symlink("../" + device_name_short, volume_symlink_full)
                     # Create udev rule to fix: https://github.com/sysoperator/kube-vcloud-flexvolume/issues/7
                     # Use more stable device names:
-                    # SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{ID_PATH}=="pci-0000:03:00.0-scsi-0:0:1:0", SYMLINK+="block/7e9554ee-0bca-43b8-80a0-c50498ba45b1"
+                    # SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="pci-0000:03:00.0-scsi-0:0:1:0", SYMLINK+="block/7e9554ee-0bca-43b8-80a0-c50498ba45b1"
                     udev_rule_path = ("/etc/udev/rules.d/90-vcloud-idisk-%s.rules") % (disk_urn)
                     with open(udev_rule_path, "w") as udev_rule:
                         udev_rule.write(
-                            ('SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{ID_PATH}=="%s", SYMLINK+="%s"\n') % \
+                            ('SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="%s", SYMLINK+="%s"\n') % \
                                     (disk_path_short, volume_symlink)
                         )
                         udev_rule.close()
-            
+
             lock.release()
         else:
             if os.path.lexists(volume_symlink_full):
