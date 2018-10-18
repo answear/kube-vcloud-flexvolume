@@ -5,7 +5,7 @@ import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
-from time import sleep
+from time import sleep, time
 
 try:
     from subprocess import DEVNULL
@@ -222,17 +222,28 @@ def attach(ctx,
             )
 
         cmd_find_symlink = ("find -L /dev/disk/by-path -samefile %s") % (partition)
+        found = False
         try:
-            ret = subprocess.check_output(
-                    cmd_find_symlink,
-                    shell=True
-            )
-            partition = ret.decode().strip()
+            # with timeout
+            _timeout = 5
+            _start = time()
+            while time() < _start + _timeout:
+                sleep(1)
+                ret = subprocess.check_output(
+                        cmd_find_symlink,
+                        shell=True
+                )
+                partition = ret.decode().strip()
+                if partition.startswith("/dev/disk/by-path"):
+                    found = True
+                    break
         except subprocess.CalledProcessError:
-            raise Exception(
-                    ("Could not find partition '%s' in /dev/disk/by-path dir") % (partition)
-            )
+            pass
 
+        if found == False:
+            raise Exception(
+                    ("Could not find symlink for partition '%s' in /dev/disk/by-path dir") % (partition)
+            )
         success = {
             "status": "Success",
             "device": "%s" % partition
