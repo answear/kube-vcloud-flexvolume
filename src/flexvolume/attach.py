@@ -322,8 +322,8 @@ def waitforattach(ctx,
             info(success)
         else:
             raise Exception(
-                    ("Mount device '%s' (=> %s) is not attached on the remote node") % \
-                            (mountdev, part)
+                    ("Mount device '%s' is not attached on the remote node") % \
+                            (mountdev)
             )
     except Exception as e:
         failure = {
