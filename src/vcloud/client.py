@@ -44,6 +44,7 @@ def login(session_id=None):
         # Set contextual data:
         ctx.client = client
         ctx.vdc = VDC(client, href=the_vdc.get('href'))
+        ctx.org = org
         ctx.token = client._session.headers['x-vcloud-authorization']
     except Exception as e:
         if config['debug'] == True:
