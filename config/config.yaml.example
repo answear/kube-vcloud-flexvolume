@@ -2,6 +2,8 @@ vcloud:
   host: <HOST without proto>
   org: <ORG>
   vdc: <VDC NAME>
+  catalog: <CATALOG>
+  template: <VAPP TEMPLATE>
   username: <USERNAME>
   password: <PASSWORD>
   verify_ssl_certs: False
