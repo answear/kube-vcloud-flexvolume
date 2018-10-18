@@ -9,10 +9,11 @@ Status
 ======
 
 Successfully run this driver on production Kubernetes cluster for over half a year without any loose of data.
-The current Release Candidate is: [2.1.0rc2](../../releases/tag/2.1.0rc2).
+The current Release Candidate is: [2.2.0rc1](../../releases/tag/2.2.0rc1).
 
-WARNING: This version fixes problem with unstable disk paths which under some circumstances could cause data loss.
-After upgrade convert udev rules files to new format using [scripts/fix_udev_rules.sh](scripts/fix_udev_rules.sh).
+WARNING: Versions prior to [2.2.0rc1](../../releases/tag/2.2.0rc1) have a problem with unstable disk paths which under some circumstances could cause data loss.
+After upgrade from affected versions make sure udev rules have been properly converted to the new format using [this script](scripts/fix_udev_rules.sh).
+
 
 Caveats
 =======
@@ -59,7 +60,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.1.0rc2
+git checkout 2.2.0rc1
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -67,7 +68,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.1.0rc2
+pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.2.0rc1
 ```
 
 *  Restart kubelet process.
