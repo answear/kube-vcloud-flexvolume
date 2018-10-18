@@ -8,7 +8,7 @@ driver for Kubernetes.
 Status
 ======
 
-Successfully run this driver on production Kubernetes cluster for over half a year without any loose of data.
+Successfully run this driver on production Kubernetes cluster for over half a year without any loss of data.
 The current Release Candidate is: [2.2.0rc1](../../releases/tag/2.2.0rc1).
 
 WARNING: Versions prior to [2.2.0rc1](../../releases/tag/2.2.0rc1) have a problem with unstable disk paths which under some circumstances could cause data loss.
