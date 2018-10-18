@@ -157,15 +157,18 @@ def attach(ctx,
 
                 device_name, device_status = is_disk_connected
                 device_name_short = device_name.split('/')[-1]
+                disk_path = get_disk_path(device_name)
+                disk_path_short = disk_path.split('/')[-1]
                 if os.path.lexists(volume_symlink_full) == False:
-                    os.symlink("../" + device_name_short, volume_symlink_full)
+                    os.symlink("../disk/by-path/" + disk_path_short, volume_symlink_full)
                     # Create udev rule to fix: https://github.com/sysoperator/kube-vcloud-flexvolume/issues/7
-                    # SUBSYSTEM=="block", ENV{DEVNAME}=="/dev/sdb", SYMLINK+="block/1a6f82c4-fcb2-45d7-86e9-eac40195ca64"
-                    udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
+                    # Use more stable device names:
+                    # SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{ID_PATH}=="pci-0000:03:00.0-scsi-0:0:1:0", SYMLINK+="block/7e9554ee-0bca-43b8-80a0-c50498ba45b1"
+                    udev_rule_path = ("/etc/udev/rules.d/90-vcloud-idisk-%s.rules") % (disk_urn)
                     with open(udev_rule_path, "w") as udev_rule:
                         udev_rule.write(
-                            ('SUBSYSTEM=="block", ENV{DEVNAME}=="%s", SYMLINK+="%s"\n') % \
-                                    (device_name, volume_symlink)
+                            ('SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{ID_PATH}=="%s", SYMLINK+="%s"\n') % \
+                                    (disk_path_short, volume_symlink)
                         )
                         udev_rule.close()
             
@@ -216,6 +219,18 @@ def attach(ctx,
             partition = ("/%s/%s") % (
                     device_name.split('/')[1],
                     partitions[0]
+            )
+
+        cmd_find_symlink = ("find -L /dev/disk/by-path -samefile %s") % (partition)
+        try:
+            ret = subprocess.check_output(
+                    cmd_find_symlink,
+                    shell=True
+            )
+            partition = ret.decode().strip()
+        except subprocess.CalledProcessError:
+            raise Exception(
+                    ("Could not find partition '%s' in /dev/disk/by-path dir") % (partition)
             )
 
         success = {
@@ -277,9 +292,17 @@ def waitforattach(ctx,
             partitions = disk_partitions(device_name.split('/')[-1])
         attached = False
         for part in partitions:
-            if part == mountdev.split('/')[-1]:
-                attached = True
-                break
+            cmd_find_symlink = ("find -L /dev/disk/by-path -samefile /dev/%s") % (part)
+            try:
+                ret = subprocess.check_output(
+                        cmd_find_symlink,
+                        shell=True
+                )
+                if ret.decode().strip() == mountdev:
+                    attached = True
+                    break
+            except subprocess.CalledProcessError:
+                continue
         if attached:
             success = {
                 "status": "Success",
