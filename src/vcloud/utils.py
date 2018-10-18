@@ -59,5 +59,14 @@ def wait_for_connected_disk(timeout=600):
             break
     return result
 
+def get_disk_path(device_node):
+    try:
+        context = pyudev.Context()
+        device = pyudev.Devices.from_device_file(context, device_node)
+        disk_path = filter(lambda x : x.find('disk/by-path') >= 0, device.device_links)
+        return list(disk_path)[0]
+    except Exception as e:
+        return None
+
 class DiskTimeoutException(Exception):
     pass

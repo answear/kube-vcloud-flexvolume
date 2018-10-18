@@ -127,7 +127,7 @@ def detach(ctx,
             if device_status == 'disconnected':
                 if os.path.lexists(volume_symlink_full):
                     os.unlink(volume_symlink_full)
-                udev_rule_path = ("/etc/udev/rules.d/90-independent-disk-%s.rules") % (device_name_short)
+                udev_rule_path = ("/etc/udev/rules.d/90-vcloud-idisk-%s.rules") % (disk_urn)
                 if os.path.exists(udev_rule_path):
                     os.unlink(udev_rule_path)
         Client.logout()
