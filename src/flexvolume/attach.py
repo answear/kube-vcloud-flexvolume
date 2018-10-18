@@ -17,7 +17,7 @@ import json
 
 from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import disk_partitions, wait_for_connected_disk, DiskTimeoutException
+from vcloud.utils import disk_partitions, wait_for_connected_disk, get_disk_path, DiskTimeoutException
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
