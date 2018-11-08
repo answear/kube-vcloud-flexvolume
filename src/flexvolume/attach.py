@@ -210,7 +210,7 @@ def attach(ctx,
                         device_name,
                         1
                 )
-            except subprocess.CalledProcesError:
+            except subprocess.CalledProcessError:
                 raise Exception(
                         ("Could not create partition on device '%s'") % (device_name)
                 )
@@ -253,7 +253,7 @@ def attach(ctx,
         failure = {
             "status": "Failure",
             "message": (
-                    ("Error on line %d in file %s (%s): %s") % 
+                    ("Error on line %d in file %s (%s): %s") %
                     (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
             )
         }
@@ -329,7 +329,7 @@ def waitforattach(ctx,
         failure = {
             "status": "Failure",
             "message": (
-                    ("Error on line %d in file %s (%s): %s") % 
+                    ("Error on line %d in file %s (%s): %s") %
                     (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
             )
         }
@@ -374,7 +374,7 @@ def isattached(ctx,
         failure = {
             "status": "Failure",
             "message": (
-                    ("Error on line %d in file %s (%s): %s") % 
+                    ("Error on line %d in file %s (%s): %s") %
                     (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
             )
         }
