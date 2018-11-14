@@ -4,6 +4,7 @@ from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
 from pyvcloud.vcd.utils import extract_id
 from pyvcloud.vcd.vapp import VApp
+from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.client import TaskStatus
 
 def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
@@ -42,7 +43,7 @@ def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
             pass
     return result
 
-def add_vm_to_vapp(ctx, spec={}):
+def add_vm_to_vapp(ctx, spec={}, power_on=False):
     vapp_resource = ctx.vdc.get_vapp(spec['vapp'])
     the_vapp = VApp(ctx.client, resource=vapp_resource)
     catalog_item = ctx.org.get_catalog_item(ctx.config['catalog'], ctx.config['template'])
@@ -52,7 +53,45 @@ def add_vm_to_vapp(ctx, spec={}):
     if type(spec['storage_profile']) == type(''):
         spec['storage_profile'] = ctx.vdc.get_storage_profile(spec['storage_profile'])
     vms = [spec]
-    result = the_vapp.add_vms(vms)
+    result = the_vapp.add_vms(vms, power_on=power_on)
+    task = ctx.client.get_task_monitor().wait_for_status(
+                        task=result,
+                        timeout=60,
+                        poll_frequency=2,
+                        fail_on_statuses=None,
+                        expected_target_statuses=[
+                            TaskStatus.SUCCESS,
+                            TaskStatus.ABORTED,
+                            TaskStatus.ERROR,
+                            TaskStatus.CANCELED],
+                        callback=None)
+    assert task.get('status') == TaskStatus.SUCCESS.value
+
+def power_on_vm(ctx, vm_name, vapp_name):
+    vapp_resource = ctx.vdc.get_vapp(vapp_name)
+    the_vapp = VApp(ctx.client, resource=vapp_resource)
+    vm_resource = the_vapp.get_vm(vm_name)
+    vm = VM(ctx.client, resource=vm_resource)
+    result = vm.power_on()
+    task = ctx.client.get_task_monitor().wait_for_status(
+                        task=result,
+                        timeout=60,
+                        poll_frequency=2,
+                        fail_on_statuses=None,
+                        expected_target_statuses=[
+                            TaskStatus.SUCCESS,
+                            TaskStatus.ABORTED,
+                            TaskStatus.ERROR,
+                            TaskStatus.CANCELED],
+                        callback=None)
+    assert task.get('status') == TaskStatus.SUCCESS.value
+
+def power_off_vm(ctx, vm_name, vapp_name):
+    vapp_resource = ctx.vdc.get_vapp(vapp_name)
+    the_vapp = VApp(ctx.client, resource=vapp_resource)
+    vm_resource = the_vapp.get_vm(vm_name)
+    vm = VM(ctx.client, resource=vm_resource)
+    result = vm.power_off()
     task = ctx.client.get_task_monitor().wait_for_status(
                         task=result,
                         timeout=60,
