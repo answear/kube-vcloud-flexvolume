@@ -280,7 +280,7 @@ def waitforattach(ctx,
         )
         if disk_urn is None:
             raise Exception(
-                    ("Volume '%s' does not exist") % (mountdev)
+                    ("Volume '%s' does not exist") % (volume)
             )
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
@@ -309,7 +309,8 @@ def waitforattach(ctx,
                         cmd_find_symlink,
                         shell=True
                 )
-                if ret.decode().strip() == mountdev:
+                device = ret.decode().strip()
+                if device:
                     attached = True
                     break
             except subprocess.CalledProcessError:
@@ -317,13 +318,13 @@ def waitforattach(ctx,
         if attached:
             success = {
                 "status": "Success",
-                "device": "%s" % mountdev
+                "device": "%s" % device
             }
             info(success)
         else:
             raise Exception(
-                    ("Mount device '%s' is not attached on the remote node") % \
-                            (mountdev)
+                    ("Volume '%s' is not attached on the remote node") % \
+                            (volume)
             )
     except Exception as e:
         failure = {
