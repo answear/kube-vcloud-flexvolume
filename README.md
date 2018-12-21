@@ -40,8 +40,8 @@ Installation
 ============
 
 *  Make sure kubelet is running with `--enable-controller-attach-detach=false`
-*  Create the directory `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/sysoperator.pl~vcloud`
-*  Install wrapper `scripts/vcloud` as `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/sysoperator.pl~vcloud/vcloud`
+*  Create the directory `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/answear.com~vcloud`
+*  Install wrapper `scripts/vcloud` as `/usr/libexec/kubernetes/kubelet-plugins/volume/exec/answear.com~vcloud/vcloud`
 *  Create the directory `/opt/vcloud-flexvolume/etc`
 *  Install configuration file `config/config.yaml.example` as `/opt/vcloud-flexvolume/etc/config.yaml` and set parameters.
 
@@ -68,7 +68,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/sysoperator/kube-vcloud-flexvolume.git@2.3.0
+pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.3.0
 ```
 
 *  Restart kubelet process.
