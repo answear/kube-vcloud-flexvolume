@@ -153,6 +153,8 @@ def attach(ctx,
                         TaskStatus.CANCELED
                     ],
                     callback=None)
+                # Sometimes task "fails" with error:
+                # majorErrorCode=500 and message=Unable to perform this action.
                 assert task.get('status') == TaskStatus.SUCCESS.value
 
                 device_name, device_status = is_disk_connected
