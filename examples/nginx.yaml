@@ -15,7 +15,7 @@ spec:
   volumes:
   - name: testdisk
     flexVolume:
-      driver: "sysoperator.pl/vcloud"
+      driver: "answear.com/vcloud"
       fsType: "ext4"
       options:
         volumeName: "testdisk"
