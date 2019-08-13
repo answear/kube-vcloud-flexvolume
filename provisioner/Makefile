@@ -12,10 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-all build:
+ifeq ($(REGISTRY),)
+	REGISTRY = eu.gcr.io/wearco
+endif
+ifeq ($(VERSION),)
+	VERSION = latest
+endif
+IMAGE = $(REGISTRY)/kube-vci-provisioner:$(VERSION)
+
+
+
+all: | compile release
+
+compile: | clean
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o build/vci-provisioner ./cmd/vci
 	strip -g build/vci-provisioner
-.PHONY: all build
+.PHONY: compile
+
+docker-build:
+	docker build -t $(IMAGE) .
+.PHONY: docker-build
+
+docker-push:
+	docker push $(IMAGE)
+.PHONY: docker-push
+
+release: | docker-build docker-push
+.PHONY: release
 
 clean:
 	rm -f build/vci-provisioner
