@@ -61,7 +61,7 @@ def mountdevice(ctx,
             os.mkdir(mountdir)
 
         try:
-            mountopts = params['mountoptions'].split(',')
+            mountopts = params['mountOptions'].split(',')
         except:
             mountopts = []
 

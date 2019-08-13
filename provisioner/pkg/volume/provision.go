@@ -49,7 +49,7 @@ func (p *vciProvisioner) Provision(options controller.ProvisionOptions) (*v1.Per
 	defaults["storage"] = "T1"
 	defaults["busType"] = "6"
 	defaults["busSubType"] = "VirtualSCSI"
-	defaults["mountoptions"] = "relatime,nobarrier"
+	defaults["mountOptions"] = "relatime,nobarrier"
 
 	parameters := options.StorageClass.Parameters
 
