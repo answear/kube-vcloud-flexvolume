@@ -25,9 +25,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const {
+const (
 	annProvisionedBy = "pv.kubernetes.io/provisioned-by"
-}
+)
 
 type vciProvisioner struct {
 	name       string

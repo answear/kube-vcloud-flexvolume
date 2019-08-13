@@ -29,6 +29,7 @@ def delete(ctx,
         if attached_vm is not None:
             raise Exception(
                     ("Could not delete attached volume '%s'") % (volume)
+            )
 
         is_disk_deleted = Disk.delete_disk(
                 Client.ctx,
