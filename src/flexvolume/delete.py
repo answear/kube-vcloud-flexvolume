@@ -3,7 +3,6 @@ import sys
 
 import click
 
-from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk
 from .cli import cli, error, info, GENERIC_SUCCESS
 
@@ -39,19 +38,6 @@ def delete(ctx,
             raise Exception(
                     ("Could not delete volume '%s'") % (volume)
                 )
-        else:
-            # Make sure task is completed
-            task = Client.ctx.client.get_task_monitor().wait_for_status(
-                task=is_disk_deleted[0],
-                timeout=60,
-                poll_frequency=2,
-                fail_on_statuses=None,
-                expected_target_statuses=[
-                    TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-                    TaskStatus.CANCELED
-                ],
-                callback=None)
-            assert task.get('status') == TaskStatus.SUCCESS.value
         info(GENERIC_SUCCESS)
     except Exception as e:
         failure = {
