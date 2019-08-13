@@ -1,0 +1,35 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: slow
+  labels:
+    storage.answear.com/class: T1
+    storage.answear.com/type: vcloud
+provisioner: provisioner.answear.com/vci
+reclaimPolicy: Retain
+parameters:
+  storage: T1
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+  labels:
+    storage.answear.com/class: T2
+    storage.answear.com/type: vcloud
+provisioner: provisioner.answear.com/vci
+reclaimPolicy: Retain
+parameters:
+  storage: T2
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast
+  labels:
+    storage.answear.com/class: T3
+    storage.answear.com/type: vcloud
+provisioner: provisioner.answear.com/vci
+reclaimPolicy: Retain
+parameters:
+  storage: T3
