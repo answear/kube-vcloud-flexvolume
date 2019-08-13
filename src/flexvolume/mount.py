@@ -61,7 +61,11 @@ def mountdevice(ctx,
             os.mkdir(mountdir)
 
         try:
-            mountopts = params['mountOptions'].split(',')
+            mountoptskey = 'mountOptions'
+            # Backwards compatibility with versions prior to 2.4.0
+            if mountoptskey.lower() in params:
+                mountoptskey = mountoptskey.lower()
+            mountopts = params[mountoptskey].split(',')
         except:
             mountopts = []
 
