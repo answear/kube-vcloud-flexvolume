@@ -8,7 +8,7 @@ RUN apt-get update \
 		&& apt-get clean
 
 COPY entrypoint.sh /
-COPY vci-provisioner /
+COPY build/vci-provisioner /
 
 ENTRYPOINT ["/entrypoint.sh"]
 

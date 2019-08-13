@@ -13,9 +13,10 @@
 # limitations under the License.
 
 all build:
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o vci-provisioner ./cmd/vci
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o build/vci-provisioner ./cmd/vci
+	strip -g build/vci-provisioner
 .PHONY: all build
 
 clean:
-	rm -f vci-provisioner
+	rm -f build/vci-provisioner
 .PHONY: clean

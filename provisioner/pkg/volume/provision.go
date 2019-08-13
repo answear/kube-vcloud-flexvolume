@@ -17,10 +17,17 @@ limitations under the License.
 package volume
 
 import (
+	"fmt"
+
+	"github.com/golang/glog"
 	"sigs.k8s.io/sig-storage-lib-external-provisioner/controller"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const {
+	annProvisionedBy = "pv.kubernetes.io/provisioned-by"
+}
 
 type vciProvisioner struct {
 	name       string
@@ -41,7 +48,7 @@ var _ controller.Provisioner = &vciProvisioner{}
 // Provision creates a storage asset and returns a PV object representing it.
 func (p *vciProvisioner) Provision(options controller.ProvisionOptions) (*v1.PersistentVolume, error) {
 	annotations := map[string]string{
-		"pv.kubernetes.io/provisioned-by": p.name,
+		annProvisionedBy: p.name,
 	}
 	capacity := options.PVC.Spec.Resources.Requests[v1.ResourceName(v1.ResourceStorage)]
 
@@ -68,10 +75,17 @@ func (p *vciProvisioner) Provision(options controller.ProvisionOptions) (*v1.Per
 	defaults["size"] = capacity.String()
 	defaults["volumeName"] = options.PVName
 
+	glog.Infof("Provisioning PV name: %s size: %s file system: %s storage class: %s",
+		defaults["volumeName"],
+		defaults["size"],
+		fsType,
+		options.StorageClass.ObjectMeta.Name,
+	)
 	pv := &v1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: options.PVName,
 			Annotations: annotations,
+			Labels: options.StorageClass.ObjectMeta.Labels,
 		},
 		Spec: v1.PersistentVolumeSpec{
 
@@ -98,5 +112,16 @@ func (p *vciProvisioner) Provision(options controller.ProvisionOptions) (*v1.Per
 // Delete removes the storage asset that was created by Provision represented
 // by the given PV.
 func (p *vciProvisioner) Delete(volume *v1.PersistentVolume) error {
+	glog.Infof("Deleting PV name: %s", volume.Name)
+
+	ann, ok := volume.Annotations[annProvisionedBy]
+	if !ok {
+		return fmt.Errorf("Annotation %s not found", annProvisionedBy)
+	}
+	if ann != p.name {
+		return fmt.Errorf("PV not provisioned by provisioner %s", p.name)
+	}
+	// TODO: Delete the storage asset
+
 	return nil
 }
