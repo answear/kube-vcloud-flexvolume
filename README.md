@@ -9,7 +9,10 @@ Status
 ======
 
 Successfully run this driver on production Kubernetes cluster for over half a year without any loss of data.
-The current stable version is: [2.3.0](../../releases/tag/2.3.0).
+The current stable version is: [2.4.0](../../releases/tag/2.4.0).
+
+Version 2.4.0 introduces [external vcloud-provisioner](provisioner) for ease provisioning Persistent Volumes.
+Provisioner is deployed inside Kubernetes cluster as a Pod controlled by [Deployment](provisioner/deployment).
 
 WARNING: Versions prior to [2.2.1rc1](../../releases/tag/2.2.1rc1) have a problem with unstable disk paths which under some circumstances could cause data loss.
 After upgrade from affected versions make sure udev rules have been properly converted to the new format using [this script](scripts/fix_udev_rules.sh).
@@ -60,7 +63,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.3.0
+git checkout 2.4.0
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -68,7 +71,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.3.0
+pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.4.0
 ```
 
 *  Restart kubelet process.
@@ -108,6 +111,8 @@ Optional options may be passed:
 
 Driver invocation
 =================
+
+NOTE: Versions prior to 2.4.0 have "mountoptions" (lowercase). For backwards compatibility and for using StorageClass.MountOptions in provisioner we accept both versions.
 
 *  Init:
 
