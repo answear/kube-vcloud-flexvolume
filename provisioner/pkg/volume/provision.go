@@ -17,6 +17,7 @@ limitations under the License.
 package volume
 
 import (
+	"strings"
 	"fmt"
 
 	"github.com/golang/glog"
@@ -71,6 +72,11 @@ func (p *vciProvisioner) Provision(options controller.ProvisionOptions) (*v1.Per
 		if exists && opt != "" {
 			defaults[k] = opt
 		}
+	}
+	// Defaults defaults["mountOptions"] to options.StorageClass.MountOptions
+	mountopts := options.StorageClass.MountOptions
+	if len(mountopts) > 0 {
+		defaults["mountOptions"] = strings.Join(mountopts[:], ",")
 	}
 	defaults["size"] = capacity.String()
 	defaults["volumeName"] = options.PVName
