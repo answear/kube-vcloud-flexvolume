@@ -201,7 +201,8 @@ def attach(ctx,
         if len(partitions) == 0:
             try:
                 # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
-                cmd_create_partition = ("echo -n ',,83;' | sfdisk %s") % (device_name)
+                # Fixed: https://github.com/answear/kube-vcloud-flexvolume/issues/18
+                cmd_create_partition = ("echo ',,83;' | sfdisk %s") % (device_name)
                 subprocess.check_call(
                         cmd_create_partition,
                         shell=True,
