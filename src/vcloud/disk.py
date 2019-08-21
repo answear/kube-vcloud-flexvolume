@@ -1,7 +1,6 @@
 import vcloud.client as Client
 
 from pyvcloud.vcd.client import TaskStatus
-from pyvcloud.vcd.client import QueryResultFormat
 from pyvcloud.vcd.client import VCLOUD_STATUS_MAP
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.utils import extract_id

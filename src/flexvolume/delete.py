@@ -17,7 +17,7 @@ def delete(ctx,
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:

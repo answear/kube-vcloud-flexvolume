@@ -39,7 +39,7 @@ def attach(ctx,
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
 
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:
@@ -77,7 +77,7 @@ def attach(ctx,
                         n += 1
                         sleep(timeout)
                         disk_urn, attached_vm = Disk.find_disk(
-                                Disk.get_disks(Client.ctx),
+                                Client.ctx,
                                 volume
                         )
                         if attached_vm is None:
@@ -278,7 +278,7 @@ def waitforattach(ctx,
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:

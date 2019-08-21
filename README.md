@@ -174,3 +174,9 @@ TODO
 *  ~~Functions in flexvolume/mount.py should raise Exceptions just like the ones in attach.py.~~
 *  Reuse vCloud API session token between invocations.
 *  Validate input JSON with JSON Schema.
+
+
+Credits
+=======
+
+ * [elFarto](https://github.com/elFarto) - for forking and improvements in `Disk.find_disk` and `Disk.get_disks` methods
