@@ -13,7 +13,7 @@ def find_disk(ctx, name):
         disk_id = extract_id(disk.get('id'))
         attached_vm = None
         if hasattr(disk, 'attached_vms') and hasattr(disk.attached_vms, 'VmReference'):
-            attached_vm = disk.attached_vms.VmReference.get('name')
+            attached_vm = disk.attached_vms.VmReference.get('href').split('/vm-')[-1]
         return [disk_id, attached_vm]
     except Exception as e:
         return [None, None]
