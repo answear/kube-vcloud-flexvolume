@@ -137,13 +137,17 @@ def detach_disk(ctx, vm_name, disk_name, block=False):
 
 def get_disks(ctx):
     result = []
-    attached_vm = \
-        lambda x, disk: next((i['vm'] for i in x if i['disk'] == disk), None)
     try:
         disks = ctx.vdc.get_disks()
-        disks_relation = get_vm_disk_relation(ctx)
         for disk in disks:
             disk_id = extract_id(disk.get('id'))
+            try:
+                attached_vms = disk['attached_vms'].VmReference
+                attached_vm = attached_vms.get('name')
+                attached_vm_href = attached_vms.get('href')
+            except AttributeError:
+                attached_vm = None
+                attached_vm_href = None
             result.append(
                 {
                     'name': disk.get('name'),
@@ -156,35 +160,11 @@ def get_disks(ctx):
                             int(disk.get('size'))
                     ),
                     'status': VCLOUD_STATUS_MAP.get(int(disk.get('status'))),
-                    'attached_vm': attached_vm(disks_relation, disk_id),
+                    'attached_vm': attached_vm,
+                    'attached_vm_href': attached_vm_href,
                     'vdc': extract_id(ctx.vdc.resource.get('id'))
                 }
 
-            )
-        # Refresh session after Typed Query
-        Client.login(session_id=ctx.token)
-    except Exception as e:
-        if ctx.config['debug'] == True:
-            raise
-        else:
-            pass
-    return result
-
-def get_vm_disk_relation(ctx):
-    result = []
-    try:
-        resource_type = 'vmDiskRelation'
-        query = ctx.client.get_typed_query(
-                resource_type,
-                query_result_format=QueryResultFormat.ID_RECORDS)
-        records = list(query.execute())
-        for curr_disk in records:
-            result.append(
-                {
-                    'disk': extract_id(curr_disk.get('disk')),
-                    'vdc': extract_id(curr_disk.get('vdc')),
-                    'vm': extract_id(curr_disk.get('vm'))
-                }
             )
     except Exception as e:
         if ctx.config['debug'] == True:
