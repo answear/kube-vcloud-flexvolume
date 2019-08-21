@@ -8,8 +8,16 @@ from pyvcloud.vcd.utils import extract_id
 from vcloud.vapp import find_vm_in_vapp
 from vcloud.utils import size_to_bytes, bytes_to_size
 
-find_disk = \
-    lambda x, disk: next(([i['id'], i['attached_vm']] for i in x if i['name'] == disk), [None, None])
+def find_disk(ctx, name):
+    try:
+        disk = ctx.vdc.get_disk(name)
+        disk_id = extract_id(disk.get('id'))
+        attached_vm = None
+        if hasattr(disk, 'attached_vms') and hasattr(disk.attached_vms, 'VmReference'):
+            attached_vm = disk.attached_vms.VmReference.get('name')
+        return [disk_id, attached_vm]
+    except Exception as e:
+        return [None, None]
 
 def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_type=None):
     """
@@ -141,13 +149,11 @@ def get_disks(ctx):
         disks = ctx.vdc.get_disks()
         for disk in disks:
             disk_id = extract_id(disk.get('id'))
-            try:
-                attached_vms = disk['attached_vms'].VmReference
-                attached_vm = attached_vms.get('name')
-                attached_vm_href = attached_vms.get('href')
-            except AttributeError:
-                attached_vm = None
-                attached_vm_href = None
+            attached_vm = None
+            attached_vm_href = None
+            if hasattr(disk, 'attached_vms') and hasattr(disk.attached_vms, 'VmReference'):
+                attached_vm = disk.attached_vms.VmReference.get('name')
+                attached_vm_href = disk.attached_vms.VmReference.get('href')
             result.append(
                 {
                     'name': disk.get('name'),
