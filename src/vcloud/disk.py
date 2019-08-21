@@ -159,6 +159,8 @@ def get_disks(ctx):
                     'name': disk.get('name'),
                     'id': disk_id,
                     'href': disk.get('href'),
+                    'storage_profile': disk.StorageProfile.get('name'),
+                    'storage_profile_href': disk.StorageProfile.get('href'),
                     'bus_type': int(disk.get('busType')),
                     'bus_sub_type': disk.get('busSubType'),
                     'size_bytes': int(disk.get('size')),
