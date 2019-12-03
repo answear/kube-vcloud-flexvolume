@@ -9,8 +9,7 @@ def init(ctx):
         "status": "Success",
         "capabilities": {
             "attach": True,
-            "expand": False,
-            "requiresfsresize": False
+            "requiresFSResize": False
         }
     }
     info(success)
