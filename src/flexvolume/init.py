@@ -10,7 +10,7 @@ def init(ctx):
         "capabilities": {
             "attach": True,
             "expand": False,
-            "requiresfsresize", False
+            "requiresfsresize": False
         }
     }
     info(success)
