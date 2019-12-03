@@ -76,6 +76,25 @@ def delete_disk(ctx, name):
             pass
     return result
 
+def delete_disk_by_urn(ctx, disk_urn):
+    result = []
+    try:
+        disks = get_disks(ctx)
+        for disk in disks:
+            if disk['id'] == disk_urn:
+                ctx.vdc.delete_disk(
+                        disk['name'],
+                        disk['id']
+                )
+                result.append(disk['id'])
+    except Exception as e:
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
+    return result
+
+
 def attach_disk(ctx, vm_name, disk_name, block=False):
     try:
         vm = find_vm_in_vapp(ctx, vm_name=vm_name)
@@ -119,6 +138,39 @@ def detach_disk(ctx, vm_name, disk_name, block=False):
             disks = get_disks(ctx)
             for disk in disks:
                 if disk['name'] == disk_name:
+                    result = the_vapp.detach_disk_from_vm(disk['href'], vm['vm_name'])
+                    if block == True:
+                        task = ctx.client.get_task_monitor().wait_for_status(
+                            task=result,
+                            timeout=60,
+                            poll_frequency=2,
+                            fail_on_statuses=None,
+                            expected_target_statuses=[
+                                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                                TaskStatus.CANCELED
+                            ],
+                            callback=None)
+                        assert task.get('status') == TaskStatus.SUCCESS.value
+                        return True
+                    else:
+                        return result
+    except Exception as e:
+        if ctx.config['debug'] == True:
+            raise
+        else:
+            pass
+    return False
+
+def detach_disk_by_urn(ctx, vm_name, disk_urn, block=False):
+    try:
+        vm = find_vm_in_vapp(ctx, vm_name=vm_name)
+        if len(vm) > 0:
+            vm = vm[0]
+            vapp = ctx.vdc.get_vapp(vm['vapp_name'])
+            the_vapp = VApp(ctx.client, vm['vapp_name'], resource=vapp)
+            disks = get_disks(ctx)
+            for disk in disks:
+                if disk['id'] == disk_urn:
                     result = the_vapp.detach_disk_from_vm(disk['href'], vm['vm_name'])
                     if block == True:
                         task = ctx.client.get_task_monitor().wait_for_status(
