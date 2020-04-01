@@ -58,6 +58,37 @@ def create_disk(ctx, name, size, storage_profile_name, bus_type=None, bus_sub_ty
             return ""
     return disk_id
 
+def resize_disk(ctx, name, size, timeout=60):
+    """
+    Resize an independent disk volume
+
+    :param name: (str): The name of the disk
+    :param size: (str): The new size of disk in string format (e.g. 100Mi, 2Gi)
+    :return (bool): True or false
+    """
+
+    try:
+        size = size_to_bytes(size)
+        if size == 0:
+            raise Exception("Param 'size' should be greater than 0")
+        disk_urn, attached_vm = find_disk(ctx, name)
+        if disk_urn is None:
+            raise Exception(
+                    ("Could not find disk '%s'") % (name)
+            )
+        result = ctx.vdc.update_disk(
+                disk_id=disk_urn,
+                new_size=size
+        )
+        task = ctx.vdc.client.get_task_monitor().wait_for_success(
+                task=result, timeout=timeout
+        )
+        assert task.get('status') == TaskStatus.SUCCESS.value
+        return True
+    except Exception as e:
+        raise
+    return False
+
 def delete_disk(ctx, name):
     result = []
     try:
