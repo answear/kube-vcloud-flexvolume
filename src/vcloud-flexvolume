@@ -8,6 +8,7 @@ from flexvolume.attach import attach, waitforattach, isattached
 from flexvolume.detach import detach
 from flexvolume.mount import mountdevice, unmountdevice
 from flexvolume.volume import getvolumename
+from flexvolume.delete import delete
 
 if __name__ == '__main__':
     cli()

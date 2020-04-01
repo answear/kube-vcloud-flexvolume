@@ -1,13 +1,15 @@
 import os
 import stat
+import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
 
 import click
 
+from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import wait_for_connected_disk
+from vcloud.utils import wait_for_connected_disk, DiskTimeoutException
 from .cli import cli, error, info, GENERIC_SUCCESS
 
 @cli.command(short_help='detach the volume from the node')
@@ -19,11 +21,12 @@ def detach(ctx,
            nodename):
     config = Client.ctx.config
     try:
+        is_disk_disconnected = []
         is_logged_in = Client.login()
         if is_logged_in == False:
             raise Exception("Could not login to vCloud Director")
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:
@@ -31,12 +34,28 @@ def detach(ctx,
                     ("Volume '%s' does not exist") % (volume)
             )
 
-        volume_symlink = ("/dev/block/%s") % (disk_urn)
+        volume_symlink = ("block/%s") % (disk_urn)
+        volume_symlink_full = ("/dev/%s") % (volume_symlink)
 
+        if os.path.lexists(volume_symlink_full):
+            device_name = os.readlink(volume_symlink_full)
+            device_name_short = device_name.split('/')[-1]
         if attached_vm is None:
             info(GENERIC_SUCCESS)
+        else:
+            vm = VApp.find_vm_in_vapp(
+                    Client.ctx,
+                    vm_id=attached_vm)
+            # Check if attached to any node but not to current one
+            vm_name = vm[0]['vm_name']
 
+            # If not return GENERIC_SUCCESS
+            if vm_name != nodename:
+                info(GENERIC_SUCCESS)
+
+        # Process normal detach
         etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                 port=config['etcd']['port'],
                                  ca_cert=config['etcd']['ca_cert'],
                                  cert_key=config['etcd']['key'],
                                  cert_cert=config['etcd']['cert'],
@@ -75,24 +94,40 @@ def detach(ctx,
             else:
                 is_disk_disconnected = wait_for_connected_disk(60)
                 if len(is_disk_disconnected) == 0:
-                    raise Exception(
+                    raise DiskTimeoutException(
                         ("Timed out while waiting for volume '%s' to detach from node '%s'") % \
                                 (volume, nodename)
                     )
                 # Make sure task is completed
-                if hasattr(is_disk_detached, 'id'):
-                    Client.ctx.vca.block_until_completed(is_disk_detached)
-
-                device_name, device_status = is_disk_disconnected
-                if os.path.lexists(volume_symlink):
-                    os.unlink(volume_symlink)
+                task = Client.ctx.client.get_task_monitor().wait_for_status(
+                    task=is_disk_detached,
+                    timeout=60,
+                    poll_frequency=2,
+                    fail_on_statuses=None,
+                    expected_target_statuses=[
+                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                        TaskStatus.CANCELED
+                    ],
+                    callback=None)
+                assert task.get('status') == TaskStatus.SUCCESS.value
         lock.release()
         info(GENERIC_SUCCESS)
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
+        if len(is_disk_disconnected) == 2:
+            device_status = is_disk_disconnected[1]
+            if device_status == 'disconnected':
+                if os.path.lexists(volume_symlink_full):
+                    os.unlink(volume_symlink_full)
+                udev_rule_path = ("/etc/udev/rules.d/90-vcloud-idisk-%s.rules") % (disk_urn)
+                if os.path.exists(udev_rule_path):
+                    os.unlink(udev_rule_path)
         Client.logout()

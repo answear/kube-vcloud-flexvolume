@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-vci-provisioner
+  namespace: kube-system
+spec:
+  replicas: 1
+  revisionHistoryLimit: 4
+  selector:
+    matchLabels:
+      k8s-app: kube-vci-provisioner
+      provisioner.answear.com/vci: ""
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-vci-provisioner
+        provisioner.answear.com/vci: ""
+    spec:
+      containers:
+        - name: kube-vci-provisioner
+          image: eu.gcr.io/wearco/kube-vci-provisioner:latest
+          imagePullPolicy: "Always"
+          args:
+            - -provisionerName=provisioner.answear.com/vci
+            - -flexDriver=answear.com/vcloud
+      serviceAccountName: kube-vci-provisioner
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+      nodeSelector:
+        node-role.kubernetes.io/master: ""

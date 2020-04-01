@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
 setup(
     name='kube-vcloud-flexvolume',
     description='VMware vCloud Director flexVolume driver for Kubernetes ',
-    url='git@github.com:sysoperator/kube-vcloud-flexvolume.git',
+    url='git@github.com:answear/kube-vcloud-flexvolume.git',
     author='Piotr Mazurkiewicz',
-    author_email='piotr.mazurkiewicz@sysoperator.pl',
+    author_email='piotr.mazurkiewicz@wearco.pl',
     license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -16,7 +16,7 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3.5'
     ],
     keywords='',
     package_dir={'': 'src'},
@@ -24,15 +24,13 @@ setup(
     scripts=['src/vcloud-flexvolume'],
     install_requires=[
         'click',
-        'pyvcloud==18.2.2',
-        'pyudev',
+        'pyvcloud>=20.0.3,<20.1',
         'bitmath',
-        'etcd3autodiscover==0.1.0'
+        'etcd3autodiscover>=0.2.0'
     ],
     dependency_links=[
-        'git+https://github.com/sysoperator/python-etcd3autodiscover@0.1.0#egg=etcd3autodiscover-0.1.0'
+        'git+https://github.com/answear/python-etcd3autodiscover@1.0.0#egg=etcd3autodiscover-1.0.0'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
 )
-

@@ -1,10 +1,11 @@
 import os
 import stat
 import subprocess
+import sys
 
 from etcd3autodiscover import Etcd3Autodiscover
 from decimal import Decimal
-from time import sleep
+from time import sleep, time
 
 try:
     from subprocess import DEVNULL
@@ -14,8 +15,9 @@ except ImportError:
 import click
 import json
 
+from pyvcloud.vcd.client import TaskStatus
 from vcloud import client as Client, disk as Disk, vapp as VApp
-from vcloud.utils import disk_partitions, wait_for_connected_disk, size_to_bytes
+from vcloud.utils import disk_partitions, wait_for_connected_disk, get_disk_path, DiskTimeoutException
 from .cli import cli, error, info
 
 @cli.command(short_help='attach the volume to the node')
@@ -33,12 +35,11 @@ def attach(ctx,
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
         disk_storage = params['storage'] if 'storage' in params else config['default_storage']
-        disk_bus_type = int(params['busType']) if 'busType' in params else None
+        disk_bus_type = params['busType'] if 'busType' in params else None
         disk_bus_sub_type = params['busSubType'] if 'busSubType' in params else None
-        disk_need_resize = False
 
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:
@@ -55,7 +56,8 @@ def attach(ctx,
                         ("Could not create volume '%s'") % (volume)
                 )
 
-        volume_symlink = ("/dev/block/%s") % (disk_urn)
+        volume_symlink = ("block/%s") % (disk_urn)
+        volume_symlink_full = ("/dev/%s") % (volume_symlink)
 
         if attached_vm:
             # Disk is in attached state
@@ -75,17 +77,18 @@ def attach(ctx,
                         n += 1
                         sleep(timeout)
                         disk_urn, attached_vm = Disk.find_disk(
-                                Disk.get_disks(Client.ctx),
+                                Client.ctx,
                                 volume
                         )
                         if attached_vm is None:
                             break
 
                     if attached_vm:
-                        is_disk_detached = Disk.detach_disk_b(
+                        is_disk_detached = Disk.detach_disk(
                                 Client.ctx,
                                 vm_name,
-                                volume)
+                                volume,
+                                block=True)
                         if is_disk_detached == False:
                             raise Exception(
                                     ("Could not detach volume '%s' from '%s'") % (volume, vm_name)
@@ -98,6 +101,7 @@ def attach(ctx,
 
         if attached_vm is None:
             etcd = Etcd3Autodiscover(host=config['etcd']['host'],
+                                     port=config['etcd']['port'],
                                      ca_cert=config['etcd']['ca_cert'],
                                      cert_key=config['etcd']['key'],
                                      cert_cert=config['etcd']['cert'],
@@ -123,22 +127,6 @@ def attach(ctx,
                             ("Could not acquire lock after %0.fs. Giving up") % (absolute)
                     )
                 lock.refresh()
-
-                current_size = Disk.get_disk(Disk.get_disks(Client.ctx), 'testdisk')['size_bytes']
-                desired_size = size_to_bytes(params['size'])
-                if current_size < desired_size:
-                    disk_need_resize = True
-                    is_disk_resized = Disk.resize_disk(
-                            Client.ctx,
-                            volume,
-                            params['size']
-                    )
-                    if is_disk_resized == False:
-                        raise Exception(
-                                ("Could not resize volume '%s' from %d to %d bytes") % \
-                                        (volume, current_size, desired_size)
-                    lock.refresh()
-
                 is_disk_attached = Disk.attach_disk(
                         Client.ctx,
                         nodename,
@@ -150,22 +138,47 @@ def attach(ctx,
                     )
                 is_disk_connected = wait_for_connected_disk(60)
                 if len(is_disk_connected) == 0:
-                    raise Exception(
+                    raise DiskTimeoutException(
                             ("Timed out while waiting for volume '%s' to attach to node '%s'") % \
                                     (volume, nodename)
                     )
                 # Make sure task is completed
-                if hasattr(is_disk_attached, 'id'):
-                    Client.ctx.vca.block_until_completed(is_disk_attached)
+                task = Client.ctx.client.get_task_monitor().wait_for_status(
+                    task=is_disk_attached,
+                    timeout=60,
+                    poll_frequency=2,
+                    fail_on_statuses=None,
+                    expected_target_statuses=[
+                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                        TaskStatus.CANCELED
+                    ],
+                    callback=None)
+                # Sometimes task "fails" with error:
+                # majorErrorCode=500 and message=Unable to perform this action.
+                assert task.get('status') == TaskStatus.SUCCESS.value
 
                 device_name, device_status = is_disk_connected
-                if os.path.lexists(volume_symlink) == False:
-                    os.symlink(device_name, volume_symlink)
+                device_name_short = device_name.split('/')[-1]
+                disk_path = get_disk_path(device_name)
+                disk_path_short = disk_path.split('/')[-1]
+                if os.path.lexists(volume_symlink_full) == False:
+                    os.symlink("../" + device_name_short, volume_symlink_full)
+                    # Create udev rule to fix: https://github.com/sysoperator/kube-vcloud-flexvolume/issues/7
+                    # Use more stable device names:
+                    # SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="pci-0000:03:00.0-scsi-0:0:1:0", SYMLINK+="block/7e9554ee-0bca-43b8-80a0-c50498ba45b1"
+                    udev_rule_path = ("/etc/udev/rules.d/90-vcloud-idisk-%s.rules") % (disk_urn)
+                    with open(udev_rule_path, "w") as udev_rule:
+                        udev_rule.write(
+                            ('SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{DEVTYPE}=="disk", ENV{ID_PATH}=="%s", SYMLINK+="%s"\n') % \
+                                    (disk_path_short, volume_symlink)
+                        )
+                        udev_rule.close()
 
             lock.release()
         else:
-            if os.path.lexists(volume_symlink):
-                device_name = os.readlink(volume_symlink)
+            if os.path.lexists(volume_symlink_full):
+                device_name = "/dev/block/" + os.readlink(volume_symlink_full)
+                device_name_short = device_name.split('/')[-1]
                 try:
                     mode = os.stat(device_name).st_mode
                     assert stat.S_ISBLK(mode) == True
@@ -184,11 +197,12 @@ def attach(ctx,
                         ("Fatal error on line %d. This should never happen") % (inspect.currentframe().f_lineno)
                 )
 
-        partitions = disk_partitions(device_name.split('/')[-1])
+        partitions = disk_partitions(device_name_short)
         if len(partitions) == 0:
             try:
                 # See: http://man7.org/linux/man-pages/man8/sfdisk.8.html
-                cmd_create_partition = ("echo -n ',,83;' | sfdisk %s") % (device_name)
+                # Fixed: https://github.com/answear/kube-vcloud-flexvolume/issues/18
+                cmd_create_partition = ("echo ',,83;' | sfdisk %s") % (device_name)
                 subprocess.check_call(
                         cmd_create_partition,
                         shell=True,
@@ -199,7 +213,7 @@ def attach(ctx,
                         device_name,
                         1
                 )
-            except subprocess.CalledProcesError:
+            except subprocess.CalledProcessError:
                 raise Exception(
                         ("Could not create partition on device '%s'") % (device_name)
                 )
@@ -209,21 +223,30 @@ def attach(ctx,
                     device_name.split('/')[1],
                     partitions[0]
             )
-            if disk_need_resize:
-                try:
-                    # Resize partition:
-                    partno = partition[-1:]
-                    cmd_resize_partition = ("parted %s unit %% resizepart %s 100%%") % (device_name, partno)
-                    subprocess.check_call(
-                            cmd_resize_partition,
-                            shell=True,
-                            stdout=DEVNULL,
-                            stderr=DEVNULL
-                    )
-                except subprocess.CalledProcessError:
-                    raise Exception(
-                            ("Could not resize partition '%s' on device '%s'") % (partno, device_name)
-                    )
+
+        cmd_find_symlink = ("find -L /dev/disk/by-path -samefile %s") % (partition)
+        found = False
+        try:
+            # with timeout
+            _timeout = 5
+            _start = time()
+            while time() < _start + _timeout:
+                sleep(1)
+                ret = subprocess.check_output(
+                        cmd_find_symlink,
+                        shell=True
+                )
+                partition = ret.decode().strip()
+                if partition.startswith("/dev/disk/by-path"):
+                    found = True
+                    break
+        except subprocess.CalledProcessError:
+            pass
+
+        if found == False:
+            raise Exception(
+                    ("Could not find symlink for partition '%s' in /dev/disk/by-path dir") % (partition)
+            )
         success = {
             "status": "Success",
             "device": "%s" % partition
@@ -232,7 +255,10 @@ def attach(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") %
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
@@ -252,18 +278,19 @@ def waitforattach(ctx,
             raise Exception("Could not login to vCloud Director")
         volume = params['volumeName']
         disk_urn, attached_vm = Disk.find_disk(
-                Disk.get_disks(Client.ctx),
+                Client.ctx,
                 volume
         )
         if disk_urn is None:
             raise Exception(
-                    ("Volume '%s' does not exist") % (mountdev)
+                    ("Volume '%s' does not exist") % (volume)
             )
 
         volume_symlink = ("/dev/block/%s") % (disk_urn)
 
+        partitions = []
         if os.path.lexists(volume_symlink):
-            device_name = os.readlink(volume_symlink)
+            device_name = "/dev/block/" + os.readlink(volume_symlink)
             try:
                 mode = os.stat(device_name).st_mode
                 assert stat.S_ISBLK(mode) == True
@@ -276,27 +303,39 @@ def waitforattach(ctx,
                         ("Device '%s' exists but is not a block device") % \
                                 (device_name)
                 )
-        partitions = disk_partitions(device_name.split('/')[-1])
+            partitions = disk_partitions(device_name.split('/')[-1])
         attached = False
         for part in partitions:
-            if part == mountdev.split('/')[-1]:
-                attached = True
-                break
+            cmd_find_symlink = ("find -L /dev/disk/by-path -samefile /dev/%s") % (part)
+            try:
+                ret = subprocess.check_output(
+                        cmd_find_symlink,
+                        shell=True
+                )
+                device = ret.decode().strip()
+                if device:
+                    attached = True
+                    break
+            except subprocess.CalledProcessError:
+                continue
         if attached:
             success = {
                 "status": "Success",
-                "device": "%s" % mountdev
+                "device": "%s" % device
             }
             info(success)
         else:
             raise Exception(
-                    ("Mount device '%s' is not attached on the remote node") % \
-                            (mountdev)
+                    ("Volume '%s' is not attached on the remote node") % \
+                            (volume)
             )
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") %
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
@@ -338,7 +377,10 @@ def isattached(ctx,
     except Exception as e:
         failure = {
             "status": "Failure",
-            "message": "%s" % e
+            "message": (
+                    ("Error on line %d in file %s (%s): %s") % 
+                    (sys.exc_info()[-1].tb_lineno, sys.exc_info()[-1].tb_frame.f_code.co_filename, type(e).__name__, e)
+            )
         }
         error(failure)
     finally:
