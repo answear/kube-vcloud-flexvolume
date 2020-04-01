@@ -7,5 +7,5 @@ class Config(object):
     @classmethod
     def read(cls):
         with open(VCLOUD_CONFIG_PATH, 'r') as f:
-            cls.config = yaml.load(f)['vcloud']
+            cls.config = yaml.load(f, Loader=yaml.SafeLoader)['vcloud']
         return cls.config
