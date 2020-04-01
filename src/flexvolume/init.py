@@ -8,7 +8,8 @@ def init(ctx):
     success = {
         "status": "Success",
         "capabilities": {
-            "attach": True
+            "attach": True,
+            "requiresFSResize": False
         }
     }
     info(success)

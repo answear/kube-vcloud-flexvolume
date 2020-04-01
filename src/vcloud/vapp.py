@@ -15,7 +15,13 @@ def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
                 resource_type,
                 query_result_format=QueryResultFormat.ID_RECORDS)
         records = list(query.execute())
+        vdc_resource = ctx.vdc.get_resource()
+        vdc_id = vdc_resource.get('id')
+        vdc_name = vdc_resource.get('name')
         for curr_vapp in records:
+            vapp_vdc = curr_vapp.get('vdc')
+            if vdc_id != vapp_vdc:
+                continue
             vapp_id = curr_vapp.get('id')
             vapp_name = curr_vapp.get('name')
             vapp_href = curr_vapp.get('href')
@@ -25,6 +31,8 @@ def find_vm_in_vapp(ctx, vm_name=None, vm_id=None):
                         extract_id(vm.get('id')) == vm_id:
                     result.append(
                         {
+                            'vdc': extract_id(vapp_vdc),
+                            'vdc_name': vdc_name,
                             'vapp': extract_id(vapp_id),
                             'vapp_name': vapp_name,
                             'vm': extract_id(vm.get('id')),

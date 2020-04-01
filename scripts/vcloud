@@ -4,7 +4,7 @@ set -e
 
 cmd="$1"
 shift
-args="$@"
-echo "cmd: $cmd args: [$args]" | logger -t vcloud-flexvolume -p local0.debug
-set -- /usr/local/bin/vcloud-flexvolume $cmd $args
+argc="$#"
+echo "cmd: $cmd args: #$argc => [$@]" | logger -t vcloud-flexvolume -p local0.debug
+set -- /usr/local/bin/vcloud-flexvolume $cmd "$@"
 exec "$@"

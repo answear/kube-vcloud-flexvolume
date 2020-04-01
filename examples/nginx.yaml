@@ -15,7 +15,7 @@ spec:
   volumes:
   - name: testdisk
     flexVolume:
-      driver: "sysoperator.pl/vcloud"
+      driver: "answear.com/vcloud"
       fsType: "ext4"
       options:
         volumeName: "testdisk"
@@ -23,4 +23,4 @@ spec:
         storage: "T1"
         busType: "6"
         busSubType: "VirtualSCSI"
-        mountoptions: "relatime,nobarrier"
+        mountOptions: "relatime,nobarrier"

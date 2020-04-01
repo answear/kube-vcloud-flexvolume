@@ -9,8 +9,9 @@ vcloud:
   verify_ssl_certs: False
   log: True
   log_file: /var/log/pyvcloud.log
-  api_version: '27.0'
+  api_version: '32.0'
   default_storage: T1
+  # Optional section:
   etcd:
     host: etcd.internal
     port: 2379
