@@ -9,7 +9,11 @@ Status
 ======
 
 Successfully run this driver on production Kubernetes cluster for over half a year without any loss of data.
-The current stable version is: [2.5.1](../../releases/tag/2.5.1).
+The current stable version is: [2.6.0](../../releases/tag/2.6.0).
+
+Version 2.5.1 uses [patched](../../../../../compare/20.0.3...answear:20.0.3-fix-f-strings-py3.5?expand=1) pyvcloud to address [this](../../../../../vmware/pyvcloud/issues/649) issue.
+
+Version 2.5.0 introduces Independent Disk [resizing](https://pubs.vmware.com/vcd-80/topic/com.vmware.vcloud.api.sp.doc_90/GUID-ED825075-4278-486A-A1EB-FB47FE0226DA.html).
 
 Version 2.4.0 introduces [external vcloud-provisioner](provisioner) for ease provisioning Persistent Volumes.
 Provisioner is deployed inside Kubernetes cluster as a Pod controlled by [Deployment](provisioner/deployment).
@@ -36,7 +40,7 @@ Description
 vcloud-flexvolume provides a storage driver using vCloud's Independent Disk feature. The Independent Disk provides
 persistent disk storage which can be attached to instances running in vCloud Director environment.
 
-You can read more about Independent Disks [here](https://pubs.vmware.com/vcd-80/index.jsp?topic=/com.vmware.vcloud.api.sp.doc_90/GUID-ED825075-4278-486A-A1EB-FB47FE0226DA.html).
+You can read more about Independent Disks [here](https://pubs.vmware.com/vcd-80/topic/com.vmware.vcloud.api.sp.doc_90/GUID-84327141-54B3-4E00-9BA8-745DFBE313C3.html).
 
 
 Installation
@@ -63,7 +67,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.5.1
+git checkout 2.6.0
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -71,7 +75,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.5.1
+pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.6.0
 ```
 
 *  Restart kubelet process.
