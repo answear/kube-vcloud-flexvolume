@@ -9,7 +9,7 @@ Status
 ======
 
 Successfully run this driver on production Kubernetes cluster for over half a year without any loss of data.
-The current stable version is: [2.5.0](../../releases/tag/2.5.0).
+The current stable version is: [2.5.1](../../releases/tag/2.5.1).
 
 Version 2.4.0 introduces [external vcloud-provisioner](provisioner) for ease provisioning Persistent Volumes.
 Provisioner is deployed inside Kubernetes cluster as a Pod controlled by [Deployment](provisioner/deployment).
@@ -63,7 +63,7 @@ Install packages:
 Install the driver itself:
 
 ```
-git checkout 2.5.0
+git checkout 2.5.1
 python3 setup.py build
 sudo python3 setup.py install
 ```
@@ -71,7 +71,7 @@ sudo python3 setup.py install
 or
 
 ```
-pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.5.0
+pip3 install --process-dependency-links git+https://github.com/answear/kube-vcloud-flexvolume.git@2.5.1
 ```
 
 *  Restart kubelet process.
