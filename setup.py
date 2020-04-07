@@ -25,7 +25,7 @@ setup(
     install_requires=[
         'click',
         'bitmath',
-        'etcd3autodiscover>=0.2.0'
+        'etcd3autodiscover>=1.0.1'
     ],
     extras_require={
         ':python_version < "3.6"': [
@@ -37,7 +37,7 @@ setup(
     },
     dependency_links=[
         'git+https://github.com/answear/pyvcloud@20.0.4#egg=pyvcloud-20.0.4',
-        'git+https://github.com/answear/python-etcd3autodiscover@1.0.0#egg=etcd3autodiscover-1.0.0'
+        'git+https://github.com/answear/python-etcd3autodiscover@1.0.1#egg=etcd3autodiscover-1.0.1'
     ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
