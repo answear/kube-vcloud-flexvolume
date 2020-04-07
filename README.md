@@ -11,7 +11,7 @@ Status
 Successfully run this driver on production Kubernetes cluster for over half a year without any loss of data.
 The current stable version is: [2.6.0](../../releases/tag/2.6.0).
 
-Version 2.5.1 uses [patched](../../../../../compare/20.0.3...answear:20.0.3-fix-f-strings-py3.5?expand=1) pyvcloud to address [this](../../../../../vmware/pyvcloud/issues/649) issue.
+Version 2.5.1 uses [patched](../../../../../vmware/pyvcloud/compare/20.0.3...answear:20.0.3-fix-f-strings-py3.5?expand=1) pyvcloud to address [this](../../../../../vmware/pyvcloud/issues/649) issue.
 
 Version 2.5.0 introduces Independent Disk [resizing](https://pubs.vmware.com/vcd-80/topic/com.vmware.vcloud.api.sp.doc_90/GUID-ED825075-4278-486A-A1EB-FB47FE0226DA.html).
 

@@ -9,6 +9,7 @@ from flexvolume.detach import detach
 from flexvolume.mount import mountdevice, unmountdevice
 from flexvolume.volume import getvolumename
 from flexvolume.delete import delete
+from flexvolume.expand import expandvolume, expandfs
 
 if __name__ == '__main__':
     cli()
