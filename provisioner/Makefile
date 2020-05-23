@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ifeq ($(REGISTRY),)
-	REGISTRY = eu.gcr.io/wearco
+	REGISTRY = gcr.io/wearco
 endif
 ifeq ($(VERSION),)
 	VERSION = latest
