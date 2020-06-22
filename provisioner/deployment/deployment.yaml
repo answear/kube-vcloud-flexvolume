@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: kube-vci-provisioner
-          image: eu.gcr.io/wearco/kube-vci-provisioner:latest
+          image: gcr.io/wearco/kube-vci-provisioner:latest
           imagePullPolicy: "Always"
           args:
             - -provisionerName=provisioner.answear.com/vci
