@@ -22,12 +22,12 @@ spec:
         provisioner.answear.com/vci: ""
     spec:
       containers:
-        - name: kube-vci-provisioner
-          image: gcr.io/wearco/kube-vci-provisioner:latest
-          imagePullPolicy: "Always"
-          args:
-            - -provisionerName=provisioner.answear.com/vci
-            - -flexDriver=answear.com/vcloud
+      - name: kube-vci-provisioner
+        image: gcr.io/wearco/kube-vci-provisioner:latest
+        imagePullPolicy: "Always"
+        args:
+        - -provisionerName=provisioner.answear.com/vci
+        - -flexDriver=answear.com/vcloud
       serviceAccountName: kube-vci-provisioner
       tolerations:
       - key: CriticalAddonsOnly
